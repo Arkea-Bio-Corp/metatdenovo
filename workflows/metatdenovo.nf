@@ -100,6 +100,7 @@ include { PRODIGAL          } from '../subworkflows/local/prodigal'
 include { BBMAP_INDEX                                } from '../modules/nf-core/bbmap/index/main'
 include { BBMAP_ALIGN                                } from '../modules/nf-core/bbmap/align/main'
 include { BBMAP_BBNORM                               } from '../modules/nf-core/bbmap/bbnorm/main'
+include { SEQTK_MERGEPE                              } from '../modules/nf-core/seqtk/mergepe/main'
 include { SUBREAD_FEATURECOUNTS as FEATURECOUNTS_CDS } from '../modules/nf-core/subread/featurecounts/main'
 include { CAT_FASTQ 	          	                 } from '../modules/nf-core/cat/fastq/main'
 include { FASTQC                                     } from '../modules/nf-core/fastqc/main'
@@ -195,6 +196,36 @@ workflow METATDENOVO {
     // Step 7
     // Filter by taxa with Kraken2
     //
+
+    // MODULE: Run BBDuk to clean out whatever sequences the user supplied via params.sequence_filter
+    //
+    if ( params.sequence_filter ) {
+        BBMAP_BBDUK ( FASTQC_TRIMGALORE.out.reads, params.sequence_filter )
+        ch_clean_reads  = BBMAP_BBDUK.out.reads
+        ch_bbduk_logs = BBMAP_BBDUK.out.log.collect { it[1] }.map { [ it ] }
+        ch_versions   = ch_versions.mix(BBMAP_BBDUK.out.versions)
+        ch_collect_stats
+            .combine(ch_bbduk_logs)
+            .set {ch_collect_stats}
+        ch_multiqc_files = ch_multiqc_files.mix(BBMAP_BBDUK.out.log.collect{it[1]}.ifEmpty([]))
+    } else {
+        ch_clean_reads  = FASTQC_TRIMGALORE.out.reads
+        ch_bbduk_logs = Channel.empty()
+        ch_collect_stats
+            .map { [ it[0], it[1], it[2], [] ] }
+            .set { ch_collect_stats }
+    }
+
+    //
+    // MODULE: Interleave sequences for assembly
+    //
+    // DL & DDL: We can probably not deal with single end input
+    ch_interleaved = Channel.empty()
+    if ( ! params.assembly ) {
+        SEQTK_MERGEPE(ch_clean_reads)
+        ch_interleaved = SEQTK_MERGEPE.out.reads
+        ch_versions    = ch_versions.mix(SEQTK_MERGEPE.out.versions)
+    }
 
     // Step 8
     // SUBWORKFLOW: Perform digital normalization. There are two options: khmer or BBnorm. The latter is faster.
