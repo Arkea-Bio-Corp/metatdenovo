@@ -1,0 +1,2 @@
+sample,fastq_1,fastq_2
+SAMPLE1_PE,localdata/test_minigut_R1.fastq.gz,localdata/test_minigut_R2.fastq.gz
