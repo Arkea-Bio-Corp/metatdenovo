@@ -71,7 +71,7 @@ include { COLLECT_FEATURECOUNTS            } from '../modules/local/collect_feat
 include { COLLECT_STATS                    } from '../modules/local/collect_stats'
 include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
-include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
+//include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -81,7 +81,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 // SUBWORKFLOW: Consisting of local modules
 //
-include { EGGNOG            } from '../subworkflows/local/eggnog'
+//include { EGGNOG            } from '../subworkflows/local/eggnog'
 include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
 include { PROKKA_SUBSETS    } from '../subworkflows/local/prokka_subsets'
 include { DIGINORM          } from '../subworkflows/local/diginorm'
@@ -183,7 +183,7 @@ workflow METATDENOVO {
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
-    //
+    // Subworkflow? bowtie2
 
     // Step 5
     // rRNA remove (sortmerna)
@@ -364,17 +364,11 @@ workflow METATDENOVO {
         .set { ch_collect_stats }
 
     //
-    // SUBWORKFLOW: run eggnog_mapper on the ORF-called amino acid sequences
+    // SUBWORKFLOW: pass along ORF-called amino acid sequences
     //
-    if ( ! params.skip_eggnog ) {
-        EGGNOG(ch_aa, ch_fcs_for_summary )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions)
-        ch_merge_tables = EGGNOG.out.sumtable
-    } else {
-        ch_aa
-            .map { [ it[0], [] ] }
-            .set { ch_merge_tables }
-    }
+    ch_aa
+        .map { [ it[0], [] ] }
+        .set { ch_merge_tables }
 
     // Step 14
     // Kraken2 taxonomical annotation
@@ -383,16 +377,9 @@ workflow METATDENOVO {
     // Step 15
     // MODULE: Collect statistics from mapping analysis
     //
-    if( !params.skip_eggnog  || !params.skip_eukulele ) {
-        MERGE_TABLES ( ch_merge_tables )
-        ch_collect_stats
-            .combine(MERGE_TABLES.out.merged_table.collect{ it[1]}.map { [ it ] })
-            .set { ch_collect_stats }
-    } else {
-        ch_collect_stats
-            .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
-            .set { ch_collect_stats }
-    }
+    ch_collect_stats
+        .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
+        .set { ch_collect_stats }
 
     COLLECT_STATS(ch_collect_stats)
     ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
@@ -423,22 +410,6 @@ workflow METATDENOVO {
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
-}
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
 }
 
 /*

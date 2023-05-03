@@ -11,4 +11,6 @@ testing*
 eggnog
 kofam/
 .nextflow.log
-outdir/
+outdir*/
+# genome storage
+bos_taurus/
