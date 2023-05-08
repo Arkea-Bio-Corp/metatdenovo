@@ -5,17 +5,17 @@
 include { FASTQ_ALIGN_BOWTIE2 } from './subworkflows/nf-core/fastq_align_bowtie2'
 include { BOWTIE2_BUILD       } from './modules/nf-core/bowtie2/build'
 
-params.genome =  channel.fromPath('./bos_taurus/ncbi_dataset/data/GCA_002263795.3/GCA_002263795.3_ARS-UCD1.3_genomic.fna')
-//fastqs_ch = channel.fromFilePairs('')
+params.genome =  file('./bos_taurus/ncbi_dataset/data/GCA_002263795.3/GCA_002263795.3_ARS-UCD1.3_genomic.fna')
 
 workflow BT2_BUILD {
-    take:
-        genome_ch
-    main:
-        BOWTIE2_BUILD(genome_ch)
+    input = [
+        [id:'test'],
+        params.genome
+    ]
+    BOWTIE2_BUILD(input)
 }
 
 // Implicit workflow
 workflow  {
-    BT2_BUILD(params.genome)
+    BT2_BUILD()
 }
