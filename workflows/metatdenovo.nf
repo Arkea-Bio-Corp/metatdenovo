@@ -71,7 +71,7 @@ include { COLLECT_FEATURECOUNTS            } from '../modules/local/collect_feat
 include { COLLECT_STATS                    } from '../modules/local/collect_stats'
 include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
-include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
+//include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -81,7 +81,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 // SUBWORKFLOW: Consisting of local modules
 //
-include { EGGNOG            } from '../subworkflows/local/eggnog'
+//include { EGGNOG            } from '../subworkflows/local/eggnog'
 include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
 include { PROKKA_SUBSETS    } from '../subworkflows/local/prokka_subsets'
 include { DIGINORM          } from '../subworkflows/local/diginorm'
@@ -100,6 +100,7 @@ include { PRODIGAL          } from '../subworkflows/local/prodigal'
 include { BBMAP_INDEX                                } from '../modules/nf-core/bbmap/index/main'
 include { BBMAP_ALIGN                                } from '../modules/nf-core/bbmap/align/main'
 include { BBMAP_BBNORM                               } from '../modules/nf-core/bbmap/bbnorm/main'
+include { SEQTK_MERGEPE                              } from '../modules/nf-core/seqtk/mergepe/main'
 include { SUBREAD_FEATURECOUNTS as FEATURECOUNTS_CDS } from '../modules/nf-core/subread/featurecounts/main'
 include { CAT_FASTQ 	          	                 } from '../modules/nf-core/cat/fastq/main'
 include { FASTQC                                     } from '../modules/nf-core/fastqc/main'
@@ -182,7 +183,7 @@ workflow METATDENOVO {
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
-    //
+    // Subworkflow? bowtie2
 
     // Step 5
     // rRNA remove (sortmerna)
@@ -195,6 +196,36 @@ workflow METATDENOVO {
     // Step 7
     // Filter by taxa with Kraken2
     //
+
+    // MODULE: Run BBDuk to clean out whatever sequences the user supplied via params.sequence_filter
+    //
+    if ( params.sequence_filter ) {
+        BBMAP_BBDUK ( FASTQC_TRIMGALORE.out.reads, params.sequence_filter )
+        ch_clean_reads  = BBMAP_BBDUK.out.reads
+        ch_bbduk_logs = BBMAP_BBDUK.out.log.collect { it[1] }.map { [ it ] }
+        ch_versions   = ch_versions.mix(BBMAP_BBDUK.out.versions)
+        ch_collect_stats
+            .combine(ch_bbduk_logs)
+            .set {ch_collect_stats}
+        ch_multiqc_files = ch_multiqc_files.mix(BBMAP_BBDUK.out.log.collect{it[1]}.ifEmpty([]))
+    } else {
+        ch_clean_reads  = FASTQC_TRIMGALORE.out.reads
+        ch_bbduk_logs = Channel.empty()
+        ch_collect_stats
+            .map { [ it[0], it[1], it[2], [] ] }
+            .set { ch_collect_stats }
+    }
+
+    //
+    // MODULE: Interleave sequences for assembly
+    //
+    // DL & DDL: We can probably not deal with single end input
+    ch_interleaved = Channel.empty()
+    if ( ! params.assembly ) {
+        SEQTK_MERGEPE(ch_clean_reads)
+        ch_interleaved = SEQTK_MERGEPE.out.reads
+        ch_versions    = ch_versions.mix(SEQTK_MERGEPE.out.versions)
+    }
 
     // Step 8
     // SUBWORKFLOW: Perform digital normalization. There are two options: khmer or BBnorm. The latter is faster.
@@ -333,17 +364,11 @@ workflow METATDENOVO {
         .set { ch_collect_stats }
 
     //
-    // SUBWORKFLOW: run eggnog_mapper on the ORF-called amino acid sequences
+    // SUBWORKFLOW: pass along ORF-called amino acid sequences
     //
-    if ( ! params.skip_eggnog ) {
-        EGGNOG(ch_aa, ch_fcs_for_summary )
-        ch_versions = ch_versions.mix(EGGNOG.out.versions)
-        ch_merge_tables = EGGNOG.out.sumtable
-    } else {
-        ch_aa
-            .map { [ it[0], [] ] }
-            .set { ch_merge_tables }
-    }
+    ch_aa
+        .map { [ it[0], [] ] }
+        .set { ch_merge_tables }
 
     // Step 14
     // Kraken2 taxonomical annotation
@@ -352,16 +377,9 @@ workflow METATDENOVO {
     // Step 15
     // MODULE: Collect statistics from mapping analysis
     //
-    if( !params.skip_eggnog  || !params.skip_eukulele ) {
-        MERGE_TABLES ( ch_merge_tables )
-        ch_collect_stats
-            .combine(MERGE_TABLES.out.merged_table.collect{ it[1]}.map { [ it ] })
-            .set { ch_collect_stats }
-    } else {
-        ch_collect_stats
-            .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
-            .set { ch_collect_stats }
-    }
+    ch_collect_stats
+        .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
+        .set { ch_collect_stats }
 
     COLLECT_STATS(ch_collect_stats)
     ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
@@ -392,22 +410,6 @@ workflow METATDENOVO {
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
-}
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
 }
 
 /*
