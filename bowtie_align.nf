@@ -2,20 +2,22 @@
 // Taylor Falk tfalk@arkeabio.com
 // Arkea Bio Corp, May 2023
 
-include { FASTQ_ALIGN_BOWTIE2 } from './subworkflows/nf-core/fastq_align_bowtie2'
-include { BOWTIE2_BUILD       } from './modules/nf-core/bowtie2/build'
+include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align'
 
-params.genome =  channel.fromPath('./bos_taurus/ncbi_dataset/data/GCA_002263795.3/GCA_002263795.3_ARS-UCD1.3_genomic.fna')
-//fastqs_ch = channel.fromFilePairs('')
+// index_ch = Channel.fromPath("$projectDir/bos_taurus/bowtie2_index/")
+// read_ch = Channel.fromFilePairs("$projectDir/localdata/*{R1,R2}.fastq.gz")
+index_ch = Channel.fromPath(params.indexdir)
+read_ch = Channel.fromFilePairs(params.pairedreads, checkIfExists: true)
 
-workflow BT2_BUILD {
-    take:
-        genome_ch
-    main:
-        BOWTIE2_BUILD(genome_ch)
+index_ch.view()
+read_ch.view()
+
+workflow BT2_ALIGN {
+    reads = read_ch.map  { [[id: 'test'], it[1]]}
+    index = index_ch.map { [[id: 'test'], it] }
+    BOWTIE2_ALIGN(reads, index, true, false)
 }
 
-// Implicit workflow
 workflow  {
-    BT2_BUILD(params.genome)
+    BT2_ALIGN()
 }
