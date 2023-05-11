@@ -11,18 +11,18 @@ process TRIMGALORE {
     tuple val(meta), path(reads)
 
     output:
-    //tuple val(meta), path("*{3prime,5prime,trimmed,val}*.fq.gz"), emit: reads
-    tuple val(meta), path("*fastq.gz"), emit: reads
+    tuple val(meta), path("*{3prime,5prime,trimmed,val}*.fq.gz"), emit: reads
+    // tuple val(meta), path("*fastq"), emit: reads
     tuple val(meta), path("*report.txt")                        , emit: log     , optional: true
     tuple val(meta), path("*unpaired*.fq.gz")                   , emit: unpaired, optional: true
     tuple val(meta), path("*.html")                             , emit: html    , optional: true
     tuple val(meta), path("*.zip")                              , emit: zip     , optional: true
     path "versions.yml"                                         , emit: versions
-    //TODO: reconfigure this, if trim allows for more cores (why not)
 
     when:
     task.ext.when == null || task.ext.when
 
+    //TODO: reconfigure this, if trim allows for more cores (why not)
     script:
     def args = task.ext.args ?: ''
     // Calculate number of --cores for TrimGalore based on value of task.cpus
@@ -39,7 +39,7 @@ process TRIMGALORE {
     // Added soft-links to original fastqs for consistent naming in MultiQC
     def prefix = task.ext.prefix ?: "${meta.id}"
     // tolerate not gzipped fastqs
-    def gzswitch = reads[0].toString().endsWith(".gz") ? ".gz" : ""
+    def gzswitch = reads[0].toString().endsWith(".gz") ? ".gz" : ".gz"
     """
     [ ! -f  ${prefix}_1.fastq${gzswitch} ] && ln -s ${reads[0]} ${prefix}_1.fastq${gzswitch}
     [ ! -f  ${prefix}_2.fastq${gzswitch} ] && ln -s ${reads[1]} ${prefix}_2.fastq${gzswitch}
