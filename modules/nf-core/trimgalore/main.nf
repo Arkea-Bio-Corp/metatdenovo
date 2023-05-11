@@ -1,6 +1,6 @@
 process TRIMGALORE {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_macbook'
 
     conda "bioconda::trim-galore=0.6.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -11,12 +11,14 @@ process TRIMGALORE {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*{3prime,5prime,trimmed,val}*.fq.gz"), emit: reads
+    //tuple val(meta), path("*{3prime,5prime,trimmed,val}*.fq.gz"), emit: reads
+    tuple val(meta), path("*fastq.gz"), emit: reads
     tuple val(meta), path("*report.txt")                        , emit: log     , optional: true
     tuple val(meta), path("*unpaired*.fq.gz")                   , emit: unpaired, optional: true
     tuple val(meta), path("*.html")                             , emit: html    , optional: true
     tuple val(meta), path("*.zip")                              , emit: zip     , optional: true
     path "versions.yml"                                         , emit: versions
+    //TODO: reconfigure this, if trim allows for more cores (why not)
 
     when:
     task.ext.when == null || task.ext.when
@@ -36,40 +38,23 @@ process TRIMGALORE {
 
     // Added soft-links to original fastqs for consistent naming in MultiQC
     def prefix = task.ext.prefix ?: "${meta.id}"
-    if (meta.single_end) {
-        def args_list = args.split("\\s(?=--)").toList()
-        args_list.removeAll { it.toLowerCase().contains('_r2 ') }
-        """
-        [ ! -f  ${prefix}.fastq.gz ] && ln -s $reads ${prefix}.fastq.gz
-        trim_galore \\
-            ${args_list.join(' ')} \\
-            --cores $cores \\
-            --gzip \\
-            ${prefix}.fastq.gz
+    // tolerate not gzipped fastqs
+    def gzswitch = reads[0].toString().endsWith(".gz") ? ".gz" : ""
+    """
+    [ ! -f  ${prefix}_1.fastq${gzswitch} ] && ln -s ${reads[0]} ${prefix}_1.fastq${gzswitch}
+    [ ! -f  ${prefix}_2.fastq${gzswitch} ] && ln -s ${reads[1]} ${prefix}_2.fastq${gzswitch}
+    trim_galore \\
+        --paired \\
+        $args \\
+        --cores $cores \\
+        --gzip \\
+        ${prefix}_1.fastq${gzswitch} \\
+        ${prefix}_2.fastq${gzswitch}
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
-            cutadapt: \$(cutadapt --version)
-        END_VERSIONS
-        """
-    } else {
-        """
-        [ ! -f  ${prefix}_1.fastq.gz ] && ln -s ${reads[0]} ${prefix}_1.fastq.gz
-        [ ! -f  ${prefix}_2.fastq.gz ] && ln -s ${reads[1]} ${prefix}_2.fastq.gz
-        trim_galore \\
-            $args \\
-            --cores $cores \\
-            --paired \\
-            --gzip \\
-            ${prefix}_1.fastq.gz \\
-            ${prefix}_2.fastq.gz
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
-            cutadapt: \$(cutadapt --version)
-        END_VERSIONS
-        """
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
+        cutadapt: \$(cutadapt --version)
+    END_VERSIONS
+    """
 }
