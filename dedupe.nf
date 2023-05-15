@@ -1,18 +1,18 @@
-// Trim Galore! Illumina adapter trimming
-// Taylor Falk tfalk@arkeabio.com
+// Dedupe - deduplication of sequencing reads
+// Laura Holland lholland@arkeabio.com
 // Arkea Bio Corp, May 2023
 
-include { TRIMGALORE } from './modules/nf-core/trimgalore/'
+include { BBMAP_DEDUPE } from './modules/nf-core/bbmap/dedupe/'
 
 read_ch = Channel.fromFilePairs(params.pairedreads, checkIfExists: true)
 
 read_ch.view()
 
-workflow TRIMMYTRIM {
+workflow DEDUPE {
     reads = read_ch.map  { [[id: 'test'], it[1]]}
-    TRIMGALORE(reads)
+    BBMAP_DEDUPE(reads)
 }
 
 workflow  {
-    TRIMMYTRIM()
+    DEDUPE()
 }
