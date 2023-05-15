@@ -1,18 +1,21 @@
-// Trim Galore! Illumina adapter trimming
+// SortMeRNA rRNA filtering
 // Taylor Falk tfalk@arkeabio.com
 // Arkea Bio Corp, May 2023
 
-include { TRIMGALORE } from './modules/nf-core/trimgalore/'
+include { SORTMERNA } from './modules/nf-core/sortmerna/'
 
 read_ch = Channel.fromFilePairs(params.pairedreads, checkIfExists: true)
+ref_ch  = Channel.fromPath(params.reference, checkIfExists: true)
 
 read_ch.view()
+ref_ch.view()
 
-workflow TRIMMYTRIM {
+workflow RRNA_REMOVE {
     reads = read_ch.map  { [[id: 'test'], it[1]]}
-    TRIMGALORE(reads)
+    fastas = ref_ch
+    SORTMERNA(reads, fastas)
 }
 
 workflow  {
-    TRIMMYTRIM()
+    RRNA_REMOVE()
 }
