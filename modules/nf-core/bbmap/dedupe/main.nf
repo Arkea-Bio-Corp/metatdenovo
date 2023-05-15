@@ -21,12 +21,12 @@ process BBMAP_DEDUPE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def all_reads      = meta.single_end ? "in=${reads[0]}" : "in1=${reads[0]} in2=${reads[1]}"
-    def deduped_reads  = meta.single_end ? "out=${prefix}.fastq.gz" : "out1=${prefix}_1.fastq.gz out2=${prefix}_2.fastq.gz"
+    def all_reads      = meta.single_end ? "in=${reads[0]}" : "in=${reads[0]} in2=${reads[1]}"
+    def deduped_reads  = meta.single_end ? "out=${prefix}.fastq.gz" : "out=${prefix}_deduped.fastq.gz"
+
     """
-    maxmem=\$(echo \"$task.memory\"| sed 's/ GB/g/g')
     dedupe.sh \\
-        -Xmx\$maxmem \\
+        -Xmx${task.memory.toGiga()}g \\
         $all_reads \\
         $deduped_reads \\
         threads=$task.cpus \\
