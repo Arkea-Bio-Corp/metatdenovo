@@ -1,6 +1,6 @@
 process BBMAP_DEDUPE {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_macbook'
 
     conda "bioconda::bbmap=39.01"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
