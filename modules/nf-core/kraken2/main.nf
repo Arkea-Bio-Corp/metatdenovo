@@ -1,6 +1,6 @@
 process KRAKEN2_KRAKEN2 {
     tag "$meta.id"
-    label 'process_macbook'
+    label 'process_single'
 
     conda "bioconda::kraken2=2.1.2 conda-forge::pigz=2.6"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
