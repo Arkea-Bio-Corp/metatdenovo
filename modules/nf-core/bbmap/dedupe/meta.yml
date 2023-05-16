@@ -1,9 +1,7 @@
-name: bbmap_bbduk
-description: Adapter and quality trimming of sequencing reads
+name: bbmap_dedupe
+description: Deduplication of sequencing reads
 keywords:
-  - trimming
-  - adapter trimming
-  - quality trimming
+  - deduplication
   - fastq
 tools:
   - bbmap:
@@ -24,10 +22,6 @@ input:
       description: |
         List of input FastQ files of size 1 and 2 for single-end and paired-end data,
         respectively.
-  - contaminants:
-      type: file
-      description: |
-        Reference files containing adapter and/or contaminant sequences for sequence kmer matching
 
 output:
   - meta:
@@ -37,16 +31,17 @@ output:
         e.g. [ id:'test', single_end:false ]
   - reads:
       type: file
-      description: The trimmed/modified fastq reads
-      pattern: "*fastq.gz"
+      description: The deduplicated fastq reads
+      pattern: "*.{fq,fastq,gz}"
   - versions:
       type: file
       description: File containing software versions
       pattern: "versions.yml"
   - log:
       type: file
-      description: Bbduk log file
-      pattern: "*bbduk.log"
+      description: Dedupe log file
+      pattern: "*dedupe.log"
 
 authors:
   - "@MGordon09"
+  - "@lzholl"
