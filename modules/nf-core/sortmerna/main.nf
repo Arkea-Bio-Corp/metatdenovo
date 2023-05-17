@@ -24,7 +24,10 @@ process SORTMERNA {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    ls $index_dir
+    if  [[ ! ${reads[0]} == *.gz ]]; then
+        echo "Input files must be gzipped fastqs."
+        exit 1
+    fi
     sortmerna \\
         ${'--ref '+fastas.join(' --ref ')} \\
         --reads ${reads[0]} \\
@@ -38,6 +41,9 @@ process SORTMERNA {
         --out2 \\
         $args
 
+    mv non_rRNA_reads_fwd.f*q.gz ${prefix}_1.non_rRNA.fastq.gz
+    mv non_rRNA_reads_rev.f*q.gz ${prefix}_2.non_rRNA.fastq.gz
+    mv rRNA_reads.log ${prefix}.sortmerna.log
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
