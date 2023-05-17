@@ -12,5 +12,5 @@ eggnog
 kofam/
 .nextflow.log
 outdir*/
-# local storage, data on google drive
+# local storage, mostly on google drive
 localdata/
