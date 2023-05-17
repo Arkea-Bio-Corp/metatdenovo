@@ -12,5 +12,5 @@ eggnog
 kofam/
 .nextflow.log
 outdir*/
-# genome storage
-bos_taurus/
+# local storage, data on google drive
+localdata/
