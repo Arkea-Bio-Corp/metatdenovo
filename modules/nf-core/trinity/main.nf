@@ -1,11 +1,9 @@
 process TRINITY {
     tag "$meta.id"
-    label 'process_high_memory'
+    label 'process_macbook'
 
-    conda "bioconda::trinity=2.13.2"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/trinity:2.13.2--h00214ad_1':
-        'biocontainers/trinity:2.13.2--h00214ad_1' }"
+    conda "bioconda::trinity=2.15.1"
+    container "quay.io/biocontainers/trinity:2.15.1--h6ab5fc9_2"
 
     input:
     tuple val(meta), path(reads)
@@ -31,12 +29,7 @@ process TRINITY {
     seqType_args = reads[0] ==~ /(.*fasta(.gz)?$)|(.*fa(.gz)?$)/ ? "fa" : "fq"
 
     // Define the memory requirements. Trinity needs this as an option.
-    def avail_mem = 7
-    if (!task.memory) {
-        log.info '[Trinity] Available memory not known - defaulting to 7GB. Specify process memory requirements to change this.'
-    } else {
-        avail_mem = (task.memory.giga*0.8).intValue()
-    }
+    def avail_mem = task.memory.giga
 
     """
     # Note that Trinity needs the word 'trinity' in the outdir
