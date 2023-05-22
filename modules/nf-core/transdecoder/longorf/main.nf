@@ -1,11 +1,11 @@
 process TRANSDECODER_LONGORF {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_macbook'
 
     conda "bioconda::transdecoder=5.5.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
     'https://depot.galaxyproject.org/singularity/transdecoder:5.5.0--pl5262hdfd78af_4' :
-    'quay.io/comp-bio-aging/transdecoder' }"
+    'quay.io/biocontainers/transdecoder:5.7.0--pl5321hdfd78af_0' }"
 
     input:
     tuple val(meta), path(fasta)
