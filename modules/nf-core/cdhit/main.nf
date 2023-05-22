@@ -1,11 +1,11 @@
 process CDHIT_CDHIT {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_macbook'
 
     conda "bioconda::cd-hit=4.8.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/cd-hit%3A4.8.1--h5b5514e_7':
-        'biocontainers/cd-hit:4.8.1--h5b5514e_7' }"
+        'quay.io/biocontainers/cd-hit:4.8.1--h5b5514e_7' }"
 
     input:
     tuple val(meta), path(sequences)
@@ -22,11 +22,12 @@ process CDHIT_CDHIT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cd-hit \\
+    cd-hit-est \\
         -i $sequences \\
         -o ${prefix}.fasta \\
         -M $task.memory.mega \\
-        -T $task.cpus
+        -T $task.cpus \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
