@@ -10,7 +10,6 @@ process SALMON_QUANT {
     input:
     tuple val(meta), path(reads)
     path  index
-    path  transcript_fasta
 
     output:
     tuple val(meta), path("${prefix}") , emit: results
