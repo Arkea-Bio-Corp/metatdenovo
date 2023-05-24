@@ -30,7 +30,7 @@ process HMMER_HMMSCAN {
         $args \\
         --cpu $task.cpus \\
         -o $output \\
-        $hmmdir\/$hmmfile \\
+        $hmmdir/$hmmfile \\
         $pepfile
 
     cat <<-END_VERSIONS > versions.yml
