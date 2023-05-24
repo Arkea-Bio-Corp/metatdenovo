@@ -9,8 +9,8 @@ process EGGNOG_MAPPER {
 
     input:
     tuple val(meta), path(fasta)
-    val
     path(db)
+    val(dbchoice)
 
     output:
     tuple val(meta), path("*.emapper.hits")                , emit: hits
@@ -39,7 +39,7 @@ process EGGNOG_MAPPER {
         -m mmseqs \\
         --cpu $task.cpus \\
         --data_dir $db \\
-        --output $prefix \\
+        --output ${prefix}_${dbchoice} \\
         -i $input
 
     cat <<-END_VERSIONS > versions.yml
