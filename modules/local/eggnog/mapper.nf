@@ -35,7 +35,7 @@ process EGGNOG_MAPPER {
     emapper.py \\
         $args \\
         --itype CDS \\
-        -m diamond \\
+        -m pfam \\
         --cpu $task.cpus \\
         --data_dir $db \\
         --output $prefix \\
