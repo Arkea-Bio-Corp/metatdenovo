@@ -9,6 +9,7 @@ process EGGNOG_MAPPER {
 
     input:
     tuple val(meta), path(fasta)
+    val
     path(db)
 
     output:
@@ -28,14 +29,14 @@ process EGGNOG_MAPPER {
     prefix   = task.ext.prefix ?: "${meta.id}"
     input    = fasta =~ /\.gz$/ ? fasta.name.take(fasta.name.lastIndexOf('.')) : fasta
     gunzip   = fasta =~ /\.gz$/ ? "gunzip -c ${fasta} > ${input}" : ""
-
+    //  (choose from 'diamond', 'mmseqs', 'hmmer', 'novel_fams')
     """
     $gunzip
 
     emapper.py \\
         $args \\
         --itype CDS \\
-        -m pfam \\
+        -m mmseqs \\
         --cpu $task.cpus \\
         --data_dir $db \\
         --output $prefix \\
