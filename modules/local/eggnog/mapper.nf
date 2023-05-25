@@ -1,6 +1,6 @@
 process EGGNOG_MAPPER {
     tag "$meta.id"
-    label 'process_macbook'
+    label 'process_high'
 
     conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -36,7 +36,7 @@ process EGGNOG_MAPPER {
     emapper.py \\
         $args \\
         --itype CDS \\
-        -m mmseqs \\
+        -m $dbchoice \\
         --cpu $task.cpus \\
         --data_dir $db \\
         --output ${prefix}_${dbchoice} \\
