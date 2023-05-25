@@ -1,6 +1,6 @@
 process EGGNOG_MAPPER {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,7 +10,7 @@ process EGGNOG_MAPPER {
     input:
     tuple val(meta), path(fasta)
     path(db)
-    val(dbchoice)
+    each dbchoice
 
     output:
     tuple val(meta), path("*.emapper.hits")                , emit: hits
