@@ -1,8 +1,8 @@
 process EGGNOG_MAPPER {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
-    conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
+    // conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.9--pyhdfd78af_0':
         'quay.io/biocontainers/eggnog-mapper:2.1.9--pyhdfd78af_0' }"
@@ -10,6 +10,7 @@ process EGGNOG_MAPPER {
     input:
     tuple val(meta), path(fasta)
     path(db)
+    each dbchoice
 
     output:
     tuple val(meta), path("*.emapper.hits")                , emit: hits
@@ -28,28 +29,20 @@ process EGGNOG_MAPPER {
     prefix   = task.ext.prefix ?: "${meta.id}"
     input    = fasta =~ /\.gz$/ ? fasta.name.take(fasta.name.lastIndexOf('.')) : fasta
     gunzip   = fasta =~ /\.gz$/ ? "gunzip -c ${fasta} > ${input}" : ""
-
+    db_label = dbchoice
+    dbchoice = dbchoice == "hmmer" ? "hmmer -d Archaea" : dbchoice
+    dbchoice = dbchoice == "eggnog" ? "" : "-m ${dbchoice}"
     """
     $gunzip
 
     emapper.py \\
         $args \\
+        --itype proteins \\
+        $dbchoice \\
         --cpu $task.cpus \\
         --data_dir $db \\
-        --output $prefix \\
+        --output ${prefix}_${db_label} \\
         -i $input
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        eggnog: \$( echo \$(emapper.py --version 2>&1)| sed 's/.* emapper-//' | sed 's/\\/ Expected eggNOG DB version: 5.0.2 \\/ Installed eggNOG DB version: unknown \\/ Diamond version found: diamond version 2.1.4 \\/ MMseqs2 version found: 13.45111//g' )
-    END_VERSIONS
-    """
-
-    stub:
-    """
-    touch test.emapper.hits
-    touch test.emapper.seed_orthologs
-    touch test.emapper.annotations
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

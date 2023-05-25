@@ -14,3 +14,4 @@ kofam/
 outdir*/
 # local storage, data on google drive
 localdata/
+.vscode/
