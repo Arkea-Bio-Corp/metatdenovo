@@ -37,7 +37,7 @@ process EGGNOG_MAPPER {
 
     emapper.py \\
         $args \\
-        --itype CDS \\
+        --itype proteins \\
         $dbchoice \\
         --cpu $task.cpus \\
         --data_dir $db \\
