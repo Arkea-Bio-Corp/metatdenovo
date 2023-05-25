@@ -1,8 +1,8 @@
 process EGGNOG_MAPPER {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
-    conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
+    // conda (params.enable_conda ? "bioconda::eggnog-mapper=2.1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/eggnog-mapper:2.1.9--pyhdfd78af_0':
         'quay.io/biocontainers/eggnog-mapper:2.1.9--pyhdfd78af_0' }"
@@ -29,17 +29,19 @@ process EGGNOG_MAPPER {
     prefix   = task.ext.prefix ?: "${meta.id}"
     input    = fasta =~ /\.gz$/ ? fasta.name.take(fasta.name.lastIndexOf('.')) : fasta
     gunzip   = fasta =~ /\.gz$/ ? "gunzip -c ${fasta} > ${input}" : ""
-    //  (choose from 'diamond', 'mmseqs', 'hmmer', 'novel_fams')
+    db_label = dbchoice
+    dbchoice = dbchoice == "hmmer" ? "hmmer -d Archaea" : dbchoice
+    dbchoice = dbchoice == "eggnog" ? "" : "-m ${dbchoice}"
     """
     $gunzip
 
     emapper.py \\
         $args \\
         --itype CDS \\
-        -m $dbchoice \\
+        $dbchoice \\
         --cpu $task.cpus \\
         --data_dir $db \\
-        --output ${prefix}_${dbchoice} \\
+        --output ${prefix}_${db_label} \\
         -i $input
 
     cat <<-END_VERSIONS > versions.yml
