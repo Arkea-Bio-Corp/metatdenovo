@@ -92,6 +92,20 @@
                     "help_text": "By default, trimmed FastQ files will not be saved to the results directory. Specify this flag (or set to true in your config file) to copy these files to the results directory when complete.",
                     "fa_icon": "fas fa-cut"
                 },
+                "trim_length": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "",
+                    "help_text": "",
+                    "fa_icon": ""
+                },
+                "trim_quality": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "",
+                    "help_text": "",
+                    "fa_icon": ""
+                },
                 "trim_nextseq": {
                     "type": "string",
                     "description": "Instructs Trim Galore to apply the --nextseq=X option, to trim based on quality after removing poly-G tails.",
