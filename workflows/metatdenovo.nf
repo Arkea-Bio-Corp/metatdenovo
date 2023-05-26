@@ -19,20 +19,6 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 // set an empty multiqc channel
 ch_multiqc_files = Channel.empty()
 
-// If the user supplied hmm files, we will run hmmsearch and then rank the results.
-// Create a channel for hmm files.
-ch_hmmrs = Channel.empty()
-if ( params.hmmdir ) {
-    Channel
-        .fromPath(params.hmmdir + params.hmmpattern)
-        .set { ch_hmmrs }
-} else if ( params.hmmfiles ) {
-    Channel
-        .of( params.hmmfiles.split(',') )
-        .map { [ file(it) ] }
-        .set { ch_hmmrs }
-}
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,7 +185,7 @@ workflow METATDENOVO {
     ch_methods_description = Channel.value(methods_description)
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
 
