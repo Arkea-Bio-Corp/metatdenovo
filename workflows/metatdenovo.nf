@@ -172,7 +172,7 @@ workflow METATDENOVO {
     // Step 3: Trim Galore!
     //
 
-    
+
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
     // Subworkflow? bowtie2
@@ -189,76 +189,7 @@ workflow METATDENOVO {
     // Filter by taxa with Kraken2
     //
 
-    // MODULE: Run BBDuk to clean out whatever sequences the user supplied via params.sequence_filter
-    //
-    if ( params.sequence_filter ) {
-        BBMAP_BBDUK ( FASTQC_TRIMGALORE.out.reads, params.sequence_filter )
-        ch_clean_reads  = BBMAP_BBDUK.out.reads
-        ch_bbduk_logs = BBMAP_BBDUK.out.log.collect { it[1] }.map { [ it ] }
-        ch_versions   = ch_versions.mix(BBMAP_BBDUK.out.versions)
-        ch_collect_stats
-            .combine(ch_bbduk_logs)
-            .set {ch_collect_stats}
-        ch_multiqc_files = ch_multiqc_files.mix(BBMAP_BBDUK.out.log.collect{it[1]}.ifEmpty([]))
-    } else {
-        ch_clean_reads  = FASTQC_TRIMGALORE.out.reads
-        ch_bbduk_logs = Channel.empty()
-        ch_collect_stats
-            .map { [ it[0], it[1], it[2], [] ] }
-            .set { ch_collect_stats }
-    }
 
-    //
-    // MODULE: Interleave sequences for assembly
-    //
-    // DL & DDL: We can probably not deal with single end input
-    ch_interleaved = Channel.empty()
-    if ( ! params.assembly ) {
-        SEQTK_MERGEPE(ch_clean_reads)
-        ch_interleaved = SEQTK_MERGEPE.out.reads
-        ch_versions    = ch_versions.mix(SEQTK_MERGEPE.out.versions)
-    }
-
-    // Step 8
-    // SUBWORKFLOW: Perform digital normalization. There are two options: khmer or BBnorm. The latter is faster.
-    //
-    ch_pe_reads_to_assembly = Channel.empty()
-    ch_se_reads_to_assembly = Channel.empty()
-
-    if ( ! params.assembly ) {
-        if ( params.diginorm ) {
-            DIGINORM(ch_interleaved.collect { meta, fastq -> fastq }, [], 'all_samples')
-            ch_versions = ch_versions.mix(DIGINORM.out.versions)
-            ch_pe_reads_to_assembly = DIGINORM.out.pairs
-            ch_se_reads_to_assembly = DIGINORM.out.singles
-        } else if ( params.bbnorm) {
-                BBMAP_BBNORM(ch_interleaved.collect { meta, fastq -> fastq }.map {[ [id:'all_samples', single_end:true], it ] } )
-                ch_pe_reads_to_assembly = BBMAP_BBNORM.out.fastq.map { it[1] }
-                ch_se_reads_to_assembly = Channel.empty()
-        } else {
-            ch_pe_reads_to_assembly = ch_interleaved.map { meta, fastq -> fastq }
-            ch_se_reads_to_assembly = Channel.empty()
-        }
-    }
-
-    // Step 9
-    // MODULE: Run Megahit on all interleaved fastq files
-    //
-    if ( params.assembly ) {
-        Channel
-            .value ( [ [ id: 'user_assembly' ], file(params.assembly) ] )
-            .set { ch_assembly_contigs }
-    } else if ( params.assembler == MEGAHIT ) {
-        MEGAHIT_INTERLEAVED(
-            ch_pe_reads_to_assembly.collect().ifEmpty([]),
-            ch_se_reads_to_assembly.collect().ifEmpty([]),
-            'megahit_assembly'
-        )
-        MEGAHIT_INTERLEAVED.out.contigs
-            .map { [ [ id: 'megahit' ], it ] }
-            .set { ch_assembly_contigs }
-        ch_versions = ch_versions.mix(MEGAHIT_INTERLEAVED.out.versions)
-    }
 
     // Step 10
     // Clustering with CD-HIT-EST
@@ -268,43 +199,7 @@ workflow METATDENOVO {
     // Step 11
     // Call ORFs
     //
-    ch_gff = Channel.empty()
-    ch_aa  = Channel.empty()
 
-    //
-    // SUBWORKFLOW: Run PROKKA_SUBSETS on assmebly output, but split the fasta file in chunks of 10 MB, then concatenate and compress output.
-    //
-    if ( params.orf_caller == ORF_CALLER_PROKKA ) {
-        PROKKA_SUBSETS(ch_assembly_contigs)
-        UNPIGZ_GFF(PROKKA_SUBSETS.out.gff.map { [ [id: "${params.orf_caller}.${it[0].id}"], it[1] ] })
-        ch_versions      = ch_versions.mix(PROKKA_SUBSETS.out.versions)
-        ch_gff           = UNPIGZ_GFF.out.unzipped
-        ch_aa            = PROKKA_SUBSETS.out.faa
-        ch_multiqc_files = ch_multiqc_files.mix(PROKKA_SUBSETS.out.prokka_log.collect{it[1]}.ifEmpty([]))
-    }
-
-    //
-    // MODULE: Run PRODIGAL on assembly output.
-    //
-    if ( params.orf_caller == ORF_CALLER_PRODIGAL ) {
-        PRODIGAL( ch_assembly_contigs.map { [ [id: 'prodigal.megahit' ], it[1] ] } )
-        UNPIGZ_GFF(PRODIGAL.out.gff.map { [ [id: "${params.orf_caller}.${it[0].id}"], it[1] ] })
-        ch_gff          = UNPIGZ_GFF.out.unzipped
-        ch_aa           = PRODIGAL.out.faa
-        ch_versions     = ch_versions.mix(PRODIGAL.out.versions)
-    }
-
-    //
-    // MODULE: Create a BBMap index
-    //
-    BBMAP_INDEX(ch_assembly_contigs.map { it[1] })
-    ch_versions   = ch_versions.mix(BBMAP_INDEX.out.versions)
-
-    //
-    // MODULE: Call BBMap with the index once per sample
-    //
-    BBMAP_ALIGN ( ch_clean_reads, BBMAP_INDEX.out.index )
-    ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
 
     // Step 12
     // Quantification (salmon, rsem, or bbmap)
@@ -313,54 +208,6 @@ workflow METATDENOVO {
     // Step 13
     // SUBWORKFLOW: classify ORFs with a set of hmm files
     //
-    ch_hmmrs
-        .combine(ch_aa)
-        .map { [ [id: it[0].baseName ], it[0], it[2] ] }
-        .set { ch_hmmclassify }
-    HMMCLASSIFY ( ch_hmmclassify )
-    ch_versions = ch_versions.mix(HMMCLASSIFY.out.versions)
-
-    //
-    // MODULE: FeatureCounts. Create a table for each samples that provides raw counts as result of the alignment.
-    //
-
-    BAM_SORT_STATS_SAMTOOLS ( BBMAP_ALIGN.out.bam, ch_assembly_contigs.map { it[1] } )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
-
-    // if ( orf_caller == 
-    BAM_SORT_STATS_SAMTOOLS.out.bam
-        .combine(ch_gff.map { it[1] } )
-        .set { ch_featurecounts }
-
-    ch_collect_stats
-        .combine(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect { it[1]}.map { [ it ] })
-        .set { ch_collect_stats }
-
-    FEATURECOUNTS_CDS ( ch_featurecounts)
-    ch_versions       = ch_versions.mix(FEATURECOUNTS_CDS.out.versions)
-
-    //
-    // MODULE: Collect featurecounts output counts in one table
-    //
-    FEATURECOUNTS_CDS.out.counts
-        .collect() { it[1] }
-        .map { [ [ id:'all_samples'], it ] }
-        .set { ch_collect_feature }
-
-    COLLECT_FEATURECOUNTS ( ch_collect_feature )
-    ch_versions           = ch_versions.mix(COLLECT_FEATURECOUNTS.out.versions)
-    ch_fcs_for_stats      = COLLECT_FEATURECOUNTS.out.counts.collect { it[1]}.map { [ it ] }
-    ch_fcs_for_summary    = COLLECT_FEATURECOUNTS.out.counts.map { it[1]}
-    ch_collect_stats
-        .combine(ch_fcs_for_stats)
-        .set { ch_collect_stats }
-
-    //
-    // SUBWORKFLOW: pass along ORF-called amino acid sequences
-    //
-    ch_aa
-        .map { [ it[0], [] ] }
-        .set { ch_merge_tables }
 
     // Step 14
     // Kraken2 taxonomical annotation
