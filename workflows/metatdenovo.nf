@@ -126,7 +126,7 @@ workflow METATDENOVO {
     // Step 1 FastQC
     //
     FASTQC (
-        ch_fastq
+        ch_fastq[0]
     )
     ch_versions = ch_versions.mix(FASTQC.out.versions)
 
@@ -178,12 +178,12 @@ workflow METATDENOVO {
     // Step 15
     // MODULE: Collect statistics from mapping analysis
     //
-    ch_collect_stats
-        .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
-        .set { ch_collect_stats }
+    // ch_collect_stats
+    //     .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
+    //     .set { ch_collect_stats }
 
-    COLLECT_STATS(ch_collect_stats)
-    ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
+    // COLLECT_STATS(ch_collect_stats)
+    // ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -199,7 +199,7 @@ workflow METATDENOVO {
     ch_methods_description = Channel.value(methods_description)
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
 
