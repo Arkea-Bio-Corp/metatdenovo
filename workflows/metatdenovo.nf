@@ -9,18 +9,6 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowMetatdenovo.initialise(params, log)
 
-// Validate parameters for orf_caller:
-ORF_CALLER_PRODIGAL     = 'prodigal'
-ORF_CALLER_PROKKA       = 'prokka'
-
-// Validate parameters for assembler:
-MEGAHIT   = 'megahit'
-
-def valid_params = [
-    orf_caller      : [ ORF_CALLER_PRODIGAL, ORF_CALLER_PROKKA ],
-    assembler       : [ MEGAHIT ]
-]
-
 // Check input path parameters to see if they exist
 def checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -79,9 +67,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 // SUBWORKFLOW: Consisting of local modules
 //
-//include { EGGNOG            } from '../subworkflows/local/eggnog'
 include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
-include { FASTQC_TRIMGALORE } from '../subworkflows/local/fastqc_trimgalore'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,37 +123,13 @@ workflow METATDENOVO {
     .set { ch_fastq }
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
-    // 
-    // MODULE: Concatenate FastQ files from same sample if required
-    //
-    CAT_FASTQ (
-        ch_fastq.multiple
-    )
-    .reads
-    .mix(ch_fastq.single)
-    .set { ch_cat_fastq }
-
-    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
-
     // Step 1 FastQC
     //
-    FASTQC_TRIMGALORE (
-        ch_cat_fastq,
-        params.skip_fastqc || params.skip_qc,
-        params.skip_trimming
+    FASTQC (
+        ch_fastq
     )
-    ch_versions = ch_versions.mix(FASTQC_TRIMGALORE.out.versions)
+    ch_versions = ch_versions.mix(FASTQC.out.versions)
 
-    ch_collect_stats = ch_cat_fastq.collect { it[0].id }.map { [ [ id:"${params.assembler}.${params.orf_caller}" ], it ] }
-    if ( params.skip_trimming ) {
-        ch_collect_stats
-            .map { [ it[0], it[1], [] ] }
-            .set { ch_collect_stats }
-    } else {
-        ch_collect_stats
-            .combine(FASTQC_TRIMGALORE.out.trim_log.collect { it[1][0] }.map { [ it ] })
-            .set { ch_collect_stats }
-    }
 
     // Step 3: Trim Galore!
     //
@@ -238,8 +200,8 @@ workflow METATDENOVO {
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
 
 
     MULTIQC (

@@ -1,2 +1,2 @@
 sample,fastq_1,fastq_2
-SAMPLE1_PE,localdata/test_minigut_R1.fastq.gz,localdata/test_minigut_R2.fastq.gz
+SAMPLE1_PE,localdata/reads/sub_SRR18336222_1.fastq.gz,localdata/reads/sub_SRR18336222_2.fastq.gz
