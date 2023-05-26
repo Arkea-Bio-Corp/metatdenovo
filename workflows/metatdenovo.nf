@@ -66,8 +66,6 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // MODULE: local
 //
-include { MEGAHIT_INTERLEAVED              } from '../modules/local/megahit/interleaved'
-include { COLLECT_FEATURECOUNTS            } from '../modules/local/collect_featurecounts'
 include { COLLECT_STATS                    } from '../modules/local/collect_stats'
 include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
@@ -83,10 +81,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 //include { EGGNOG            } from '../subworkflows/local/eggnog'
 include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
-include { PROKKA_SUBSETS    } from '../subworkflows/local/prokka_subsets'
-include { DIGINORM          } from '../subworkflows/local/diginorm'
 include { FASTQC_TRIMGALORE } from '../subworkflows/local/fastqc_trimgalore'
-include { PRODIGAL          } from '../subworkflows/local/prodigal'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,20 +92,14 @@ include { PRODIGAL          } from '../subworkflows/local/prodigal'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { BBMAP_INDEX                                } from '../modules/nf-core/bbmap/index/main'
-include { BBMAP_ALIGN                                } from '../modules/nf-core/bbmap/align/main'
-include { BBMAP_BBNORM                               } from '../modules/nf-core/bbmap/bbnorm/main'
-include { SEQTK_MERGEPE                              } from '../modules/nf-core/seqtk/mergepe/main'
-include { SUBREAD_FEATURECOUNTS as FEATURECOUNTS_CDS } from '../modules/nf-core/subread/featurecounts/main'
-include { CAT_FASTQ 	          	                 } from '../modules/nf-core/cat/fastq/main'
-include { FASTQC                                     } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                                    } from '../modules/nf-core/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS                } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/main'
+include { FASTQC                      } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 //
 // SUBWORKFLOWS: Installed directly from nf-core/modules
 //
-include { BAM_SORT_STATS_SAMTOOLS                    } from '../subworkflows/nf-core/bam_sort_stats_samtools/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,8 +149,7 @@ workflow METATDENOVO {
 
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
 
-    // Step 1 + Step 3: FastQC and Trim Galore!
-    // SUBWORKFLOW: Read QC and trim adapters
+    // Step 1 FastQC
     //
     FASTQC_TRIMGALORE (
         ch_cat_fastq,
@@ -181,6 +169,10 @@ workflow METATDENOVO {
             .set { ch_collect_stats }
     }
 
+    // Step 3: Trim Galore!
+    //
+
+    
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
     // Subworkflow? bowtie2
