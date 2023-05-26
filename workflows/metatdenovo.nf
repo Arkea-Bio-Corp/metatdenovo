@@ -19,7 +19,6 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 // set an empty multiqc channel
 ch_multiqc_files = Channel.empty()
 
-// If the user supplied hmm files, we will run hmmsearch and then rank the results.
 // Create a channel for hmm files.
 ch_hmmrs = Channel.empty()
 if ( params.hmmdir ) {
@@ -57,17 +56,31 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 include { COLLECT_STATS                    } from '../modules/local/collect_stats'
 include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
+include { HMMER_HMMSCAN                    } from '../modules/local/hmmscan/main'
+include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mapper'
+include { EGGNOG_DOWNLOAD                  } from '../modules/local/eggnog/download'
+
 //include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { INPUT_CHECK     } from '../subworkflows/local/input_check'
+include { BT2_ALIGN       } from './bowtie_align'
+include { CDHITEST        } from './cd_hit_est'
+include { DEDUPE          } from './dedupe'
+include { MAPPY           } from './eggnog'
+include { HMMERTIME       } from './hmmscan'
+include { KRAKEN_ID       } from './kraken2'
+include { SALMONY         } from './salmon'
+include { RRNA_REMOVE     } from './sortmerna'
+include { LONGORF_PREDICT } from './transdecoder'
+include { TRIMMYTRIM      } from './trim_galore'
+include { TRINITY_TRIN    } from './trinity'
 
 //
 // SUBWORKFLOW: Consisting of local modules
 //
-include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,12 +89,24 @@ include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
 */
 
 //
-// MODULE: Installed directly from nf-core/modules
+// MODULE: Installed directly from nf-core/modules (mostly)
 //
 include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/main'
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/main'
+include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
+include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
+include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/main'
+include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/main'
+include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/main'
+include { SALMON_QUANT                } from '../modules/nf-core/salmon/quant/main'
+include { SORTMERNA                   } from '../modules/nf-core/sortmerna/main'
+include { TRANSDECODER_LONGORF        } from '../modules/nf-core/transdecoder/longorf/main'
+include { TRANSDECODER_PREDICT        } from '../modules/nf-core/transdecoder/predict/main'
+include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
+include { TRINITY                     } from '../modules/nf-core/trinity/main'
 
 //
 // SUBWORKFLOWS: Installed directly from nf-core/modules
