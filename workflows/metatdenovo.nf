@@ -155,50 +155,62 @@ workflow METATDENOVO {
     )
     ch_versions = ch_versions.mix(FASTQC.out.versions)
 
+    // Step 2 Multi QC of raw reads
 
-    // Step 3: Trim Galore!
+    // Step 3 Trim Galore!
+    // TRIMMYTRIM()
+
+    // 
+    // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
-    // Subworkflow? bowtie2
+    // BT2_ALIGN()
 
-    // Step 5
+    // Step 5 
     // rRNA remove (sortmerna)
-    //
+    // RRNA_REMOVE()
 
     // Step 6
-    // Deduplication with BBdup
-    //
+    // Deduplication with Dedupe
+    // DEDUPE()
 
     // Step 7
     // Filter by taxa with Kraken2
-    //
+    // KRAKEN_ID()
 
+    // Step 8
+    // Merge reads, normalize, and assemble with Trinity
+    // TRINITY_TRIN()
 
+    // Step 9a 
+    // concatenate multiple assemblies
+    // CAT_CAT() module? should we make a subworkflow for this?
+
+    // Step 9
+    // Clustering with CD-HIT-EST to remove redundancies
+    // CDHITEST()
 
     // Step 10
-    // Clustering with CD-HIT-EST
-    // (for concatenating multiple assemblies)
-    //
+    // ORF prediction and translation to peptide seqs with Transdecoder
+    // LONGORF_PREDICT()
 
-    // Step 11
-    // Call ORFs
-    //
-
-
-    // Step 12
+    // Step 11 --> important!! use reads from after step 5 here
     // Quantification (salmon, rsem, or bbmap)
-    //
+    // SALMONY()
+
+    // Step 12 
+    // Functional annotation with eggnog-mapper
+    // MAPPY()
 
     // Step 13
-    // SUBWORKFLOW: classify ORFs with a set of hmm files
-    //
+    // Functional annotation with hmmscan
+    // HMMERTIME()
 
     // Step 14
-    // Kraken2 taxonomical annotation
-    //
+    // Kraken2 taxonomical annotation of contigs
+    // KRAKEN_ID()
 
     // Step 15
     // MODULE: Collect statistics from mapping analysis
