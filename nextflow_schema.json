@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/metatdenovo/master/nextflow_schema.json",
-    "title": "nf-core/metatdenovo pipeline parameters",
-    "description": "Assembly and annotation of metatranscriptomic data, both prokaryotic and eukaryotic",
+    "title": "Arkea-Bio-Corp/metatdenovo pipeline parameters",
+    "description": "Assembly and annotation of bovine rumen metatranscriptomic data",
     "type": "object",
     "definitions": {
         "input_output_options": {
@@ -141,74 +141,6 @@
             },
             "fa_icon": "fas fa-filter"
         },
-        "digital_normalization_options": {
-            "title": "Digital normalization options",
-            "type": "object",
-            "description": "Use these option if you need to normalize the reads before the assembly",
-            "default": "",
-            "fa_icon": "fas fa-align-justify",
-            "properties": {
-                "bbnorm": {
-                    "type": "boolean",
-                    "description": "Perform normalization to reduce sequencing depth.",
-                    "help_text": "Normalization is performed following the example in https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbnorm-guide/",
-                    "fa_icon": "fas fa-align-justify"
-                },
-                "bbnorm_target": {
-                    "type": "integer",
-                    "default": 100,
-                    "description": "produce an output file of reads with an average depth of nx. ",
-                    "fa_icon": "fas fa-align-justify"
-                },
-                "bbnorm_min": {
-                    "type": "integer",
-                    "default": 5,
-                    "description": "Reads with an apparent depth of under nx will be presumed to be errors and discarded",
-                    "fa_icon": "fas fa-align-justify"
-                },
-                "diginorm": {
-                    "type": "boolean",
-                    "description": "Perform digital normalization to reduce sequencing depth.",
-                    "help_text": "Digital normalization is performed following the example in https://khmer-protocols.readthedocs.io/en/latest/mrnaseq/2-diginorm.html.\\nThere are (hidden) parameters for the cutoff coverage and kmer length for `normalize-by-median.py`, set to defaults following the example above (cutoff: 20 and kmer length: 20).",
-                    "fa_icon": "fas fa-align-justify"
-                },
-                "diginorm_C": {
-                    "type": "integer",
-                    "default": 20,
-                    "description": "Median coverage to keep a read, default 20.",
-                    "help_text": "This parameter is passed to `normalize-by-median.py` as the value to `-C` and to `filter-abund.py` as value to both `-C` and `-Z`",
-                    "fa_icon": "fas fa-align-justify"
-                },
-                "diginorm_k": {
-                    "type": "integer",
-                    "default": 20,
-                    "description": "Kmer length in first call of normalize-by-median.py, default 20.",
-                    "fa_icon": "fas fa-align-justify"
-                }
-            }
-        },
-        "assembler_options": {
-            "title": "Assembler options",
-            "type": "object",
-            "description": "",
-            "default": "",
-            "properties": {
-                "assembler": {
-                    "type": "string",
-                    "default": "megahit",
-                    "description": "Specify which assembler you would like to run, possible alternatives: megahit, rnaspades. default: megahit",
-                    "fa_icon": "fas fa-bezier-curve"
-                },
-                "assembly": {
-                    "type": "string",
-                    "format": "file-path",
-                    "mimetype": "text/plain",
-                    "description": "Path to a fasta file with a finished assembly. Assembly will be skipped by the pipeline.",
-                    "fa_icon": "far fa-file-code"
-                }
-            },
-            "fa_icon": "fas fa-bezier-curve"
-        },
         "orf_caller_options": {
             "title": "Orf Caller options",
             "type": "object",
@@ -246,18 +178,6 @@
                     "description": "Specify EGGNOG database path",
                     "fa_icon": "far fa-file-code"
                 },
-                "skip_kofamscan": {
-                    "type": "boolean",
-                    "description": "skip kofamscan run",
-                    "fa_icon": "fas fa-forward"
-                },
-                "kofam_dir": {
-                    "type": "string",
-                    "default": "./kofam",
-                    "description": "Path to a directory with KOfam files. Will be created if it doesn't exist.",
-                    "help_text": "If a `ko_list` file and/or `profiles` does not exist, they will be downloaded.",
-                    "fa_icon": "fas fa-folder-open"
-                },
                 "hmmdir": {
                     "type": "string",
                     "description": "Directory with hmm files which will be searched for among ORFs",
@@ -288,30 +208,6 @@
             "description": "",
             "default": "",
             "properties": {
-                "skip_eukulele": {
-                    "type": "boolean",
-                    "description": "skip eukulele run",
-                    "fa_icon": "fas fa-forward"
-                },
-                "eukulele_method": {
-                    "type": "string",
-                    "default": "mets",
-                    "description": "Specify which method to use for EUKulele. the alternatives are: mets (metatranscriptomics) or  mags (Metagenome Assembled Genomes). default: mets",
-                    "fa_icon": "fas fa-bezier-curve"
-                },
-                "eukulele_db": {
-                    "type": "string",
-                    "description": "EUKulele database.",
-                    "help_text": "This option allows the user to specify which database (or set of databases, separated by comma) to use with EUKulele. Databases that are provided with EUKulele will be downloaded if not already present inside the database directory (see --eukulele_dbpath). Possible alternatives: phylodb, mmetsp, marmmetsp, eukprot. NB: you can't use this option with a custom database as eukulele will not recognize the name and it will start to download phylodb by default. If you want to use a custom database, please skip this option and specify only --eukulele_dbpath.",
-                    "fa_icon": "far fa-file-code"
-                },
-                "eukulele_dbpath": {
-                    "type": "string",
-                    "default": "./eukulele",
-                    "description": "EUKulele database folder.",
-                    "help_text": "If this parameter is set, EUKulele will look for a database to use in this folder. If --eukulele_db also is set, the specified database will be searched for in this directory and if it is not present it will be downloaded. If a custom database (see EUKulele documentation) should be used, EUKulele will assume that it is present in this folder - N.B. only works with one custom database (if using a custom database, point to a directory that only contains that database).",
-                    "fa_icon": "far fa-file-code"
-                },
                 "cat": {
                     "type": "boolean",
                     "description": "run cat taxonomy annotation",
