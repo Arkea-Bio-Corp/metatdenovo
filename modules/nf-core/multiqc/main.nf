@@ -28,6 +28,7 @@ process MULTIQC {
     """
     multiqc \\
         --force \\
+        --dirs \\
         $args \\
         $config \\
         $extra_config \\
