@@ -53,6 +53,17 @@ include { EGGNOG_DOWNLOAD                  } from '../modules/local/eggnog/downl
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK     } from '../subworkflows/local/input_check'
+// include { BT2_ALIGN       } from '../bowtie_align.nf'
+// include { CDHITEST        } from './cd_hit_est'
+// include { DEDUPE          } from './dedupe'
+// include { MAPPY           } from './eggnog'
+// include { HMMERTIME       } from './hmmscan'
+// include { KRAKEN_ID       } from './kraken2'
+// include { SALMONY         } from './salmon'
+// include { RRNA_REMOVE     } from './sortmerna'
+// include { LONGORF_PREDICT } from './transdecoder'
+// include { TRIMMYTRIM      } from './trim_galore'
+// include { TRINITY_TRIN    } from './trinity'
 
 //
 // SUBWORKFLOW: Consisting of local modules
@@ -68,8 +79,7 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules (mostly)
 //
 include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/main'
-include { FASTQC as PRE_TRIM_FQC      } from '../modules/nf-core/fastqc/main'
-include { FASTQC as POST_TRIM_FQC     } from '../modules/nf-core/fastqc/main'
+include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/main'
@@ -121,24 +131,19 @@ workflow METATDENOVO {
 
     // Step 1 FastQC
     //
-    PRE_TRIM_FQC (
+    FASTQC (
         ch_fastq[0]
     )
-    ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
+    ch_versions = ch_versions.mix(FASTQC.out.versions)
 
-    // Step 2* Multi QC of raw reads
-    // * see below
+    // Step 2 Multi QC of raw reads
 
     // Step 3 Trim Galore!
-    //
-    TRIMGALORE(ch_fastq[0])
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+    // TRIMMYTRIM()
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    POST_TRIM_FQC(TRIMGALORE.out.reads)
-    ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
@@ -212,8 +217,7 @@ workflow METATDENOVO {
     ch_methods_description = Channel.value(methods_description)
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(POST_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
     // ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
 
