@@ -208,13 +208,13 @@
                     "type": "number",
                     "default": 0.00001,
                     "description": "",
-                    "fa_icon": "far fa-clipboard"
+                    "fa_icon": "fas fa-clipboard"
                 },
-                "annot_sense": {
+                "annot_sens": {
                     "type": "string",
                     "default": "very-sensitive",
                     "description": "",
-                    "fa_icon": "far fa-clipboard"
+                    "fa_icon": "fas fa-clipboard"
                 },
                 "hmmdir": {
                     "type": "string",
