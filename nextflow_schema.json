@@ -46,7 +46,6 @@
             "title": "Quality control options",
             "type": "object",
             "description": "Option for QC steps",
-            "default": "",
             "fa_icon": "fas fa-check",
             "properties": {
                 "skip_qc": {
@@ -121,25 +120,77 @@
             },
             "description": "all the trim option are listed below"
         },
-        "orf_caller_options": {
-            "title": "Orf Caller options",
+        "taxonomy_assignment_options": {
+            "title": "Taxonomy assignment options",
             "type": "object",
-            "description": "",
-            "default": "",
+            "description": "Options that are specific to Kraken2 for taxonomy assignment",
             "properties": {
-                "orf_caller": {
-                    "type": "string",
-                    "default": "prodigal",
-                    "description": "Specify which ORF caller you would like to run, possible alternatives: prodigal, prokka, transdecoder, default: prodigal.",
-                    "fa_icon": "fas fa-phone-volume"
+                "report_zero_counts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "",
+                    "fa_icon": "fa-dna"
                 },
-                "prodigal_trainingfile": {
-                    "type": "string",
-                    "description": "Specify a training file for prodigal. By default prodigal will learn from the input sequences",
-                    "fa_icon": "fas fa-phone-volume"
+                "use_names": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "",
+                    "fa_icon": "fa-dna"
+                },
+                "confidence": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "",
+                    "fa_icon": "fa-dna"
                 }
             },
-            "fa_icon": "fas fa-phone-volume"
+            "fa_icon": "fas fa-dna"
+        },
+        "assembly_options": {
+            "title": "de novo assembly options",
+            "type": "object",
+            "description": "Options that are specific to Trinity for assembly of RNA-Seq data",
+            "properties": {
+                "normalize_assembly": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "",
+                    "fa_icon": "fas fa-puzzle-piece"
+                },
+                "min_kmer_cov": {
+                    "type": "integer",
+                    "default": 2,
+                    "description": "",
+                    "fa_icon": "fas fa-puzzle-piece"
+                },
+                "min_contig_length": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "",
+                    "fa_icon": "fas fa-puzzle-piece"
+                }
+            },
+            "fa_icon": "fas fa-puzzle-piece"
+        },
+        "clustering_options": {
+            "title": "Clustering options",
+            "type": "object",
+            "description": "Options that are specific to CD-HIT for clustering sequences by similarity",
+            "properties": {
+                "word_length": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "",
+                    "fa_icon": "fas fa-object-group"
+                },
+                "percent_seq_id": {
+                    "type": "number",
+                    "default": 0.98,
+                    "description": "",
+                    "fa_icon": "fas fa-object-group"
+                }
+            },
+            "fa_icon": "fas fa-object-group"
         },
         "functional_annotation_options": {
             "title": "Functional annotation options",
@@ -147,16 +198,23 @@
             "description": "",
             "default": "",
             "properties": {
-                "skip_eggnog": {
+                "annot_score": {
                     "type": "boolean",
-                    "description": "Skip EGGNOG functional annotation",
-                    "fa_icon": "fas fa-forward"
+                    "default": false,
+                    "description": "",
+                    "fa_icon": "fas fa-clipboard"
                 },
-                "eggnog_dbpath": {
+                "annot_eval": {
+                    "type": "number",
+                    "default": 0.00001,
+                    "description": "",
+                    "fa_icon": "far fa-clipboard"
+                },
+                "annot_sense": {
                     "type": "string",
-                    "default": "./eggnog",
-                    "description": "Specify EGGNOG database path",
-                    "fa_icon": "far fa-file-code"
+                    "default": "very-sensitive",
+                    "description": "",
+                    "fa_icon": "far fa-clipboard"
                 },
                 "hmmdir": {
                     "type": "string",
@@ -182,8 +240,8 @@
             },
             "fa_icon": "fas fa-clipboard"
         },
-        "taxonomy_annotation_options": {
-            "title": "Taxonomy annotation options",
+        "concatenation_options": {
+            "title": "Concatenation options",
             "type": "object",
             "description": "",
             "default": "",
@@ -417,16 +475,19 @@
             "$ref": "#/definitions/trimming_options"
         },
         {
-            "$ref": "#/definitions/bbnorm_options"
+            "$ref": "#/definitions/taxonomy_assignment_options"
         },
         {
-            "$ref": "#/definitions/orf_caller_options"
+            "$ref": "#/definitions/assembly_options"
+        },
+        {
+            "$ref": "#/definitions/clustering_options"
         },
         {
             "$ref": "#/definitions/functional_annotation_options"
         },
         {
-            "$ref": "#/definitions/taxonomy_annotation_options"
+            "$ref": "#/definitions/concatenation_options"
         },
         {
             "$ref": "#/definitions/institutional_config_options"
