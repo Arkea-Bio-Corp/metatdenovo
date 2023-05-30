@@ -67,21 +67,22 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 //
 // MODULE: Installed directly from nf-core/modules (mostly)
 //
-include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/main'
-include { FASTQC as PRE_TRIM_FQC      } from '../modules/nf-core/fastqc/main'
-include { FASTQC as POST_TRIM_FQC     } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/main'
-include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/main'
-include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/main'
-include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/main'
-include { SALMON_QUANT                } from '../modules/nf-core/salmon/quant/main'
-include { SORTMERNA                   } from '../modules/nf-core/sortmerna/main'
-include { TRANSDECODER_LONGORF        } from '../modules/nf-core/transdecoder/longorf/main'
-include { TRANSDECODER_PREDICT        } from '../modules/nf-core/transdecoder/predict/main'
-include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
-include { TRINITY                     } from '../modules/nf-core/trinity/main'
+include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/'
+include { FASTQC as PRE_TRIM_FQC      } from '../modules/nf-core/fastqc/'
+include { FASTQC as POST_TRIM_FQC     } from '../modules/nf-core/fastqc/'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/'
+include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/'
+include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/'
+include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/'
+include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/'
+include { SALMON_QUANT                } from '../modules/nf-core/salmon/quant/'
+include { SORTMERNA                   } from '../modules/nf-core/sortmerna/'
+include { TRANSDECODER_LONGORF        } from '../modules/nf-core/transdecoder/longorf/'
+include { TRANSDECODER_PREDICT        } from '../modules/nf-core/transdecoder/predict/'
+include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/'
+include { TRINITY                     } from '../modules/nf-core/trinity/'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +143,11 @@ workflow METATDENOVO {
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
-    // BT2_ALIGN()
+    // 
+    index_ch = Channel.fromPath(params.indexdir)
+    index = index_ch.map { [[id: 'test'], it] }
+    BOWTIE2_ALIGN({TRIMGALORE.out.reads}, index, true, false)
+    ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // Step 5 
     // rRNA remove (sortmerna)
