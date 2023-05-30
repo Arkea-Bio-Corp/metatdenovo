@@ -128,19 +128,19 @@
                 "report_zero_counts": {
                     "type": "boolean",
                     "default": true,
-                    "description": "",
+                    "description": "Display all taxa in the final report, even if no reads are assigned to/under them. Useful for comparing samples.",
                     "fa_icon": "fa-dna"
                 },
                 "use_names": {
                     "type": "boolean",
                     "default": true,
-                    "description": "",
+                    "description": "Replaces taxonomy ID column with the scientific name and taxanomy ID in parenthesis",
                     "fa_icon": "fa-dna"
                 },
                 "confidence": {
                     "type": "number",
                     "default": 0.5,
-                    "description": "",
+                    "description": "A scoring value between 0 and 1 that acts as a threshold for labeling an individual sequence a specific taxonomy ID. The classifier will adjust the label up the taxonomic tree until the label meets or exceeds the set threshold.",
                     "fa_icon": "fa-dna"
                 }
             },
@@ -154,19 +154,19 @@
                 "normalize_assembly": {
                     "type": "boolean",
                     "default": true,
-                    "description": "",
+                    "description": "Run in silico normalization prior to read assembly",
                     "fa_icon": "fas fa-puzzle-piece"
                 },
                 "min_kmer_cov": {
                     "type": "integer",
                     "default": 2,
-                    "description": "",
+                    "description": "Minimum count for kmers to be assembled by Inchworm. Default is typically 1, but setting it to 2 helps to reduce memory requirements for large datasets (i.e. hundreds of millions of reads)  with minimal loss to sensitivity during transcript reconstruction.",
                     "fa_icon": "fas fa-puzzle-piece"
                 },
                 "min_contig_length": {
                     "type": "integer",
                     "default": 200,
-                    "description": "",
+                    "description": "Minimum assembled contig length to report. Lowering will increase number of intermediate files and lead to a more fragmented assembly. Absolute minimum accepted is 100.",
                     "fa_icon": "fas fa-puzzle-piece"
                 }
             },
@@ -180,13 +180,13 @@
                 "word_length": {
                     "type": "integer",
                     "default": 10,
-                    "description": "",
+                    "description": "Two sequences of a certain identity must share at least a specific number of identical k-mers to be clustered together.",
                     "fa_icon": "fas fa-object-group"
                 },
                 "percent_seq_id": {
                     "type": "number",
                     "default": 0.98,
-                    "description": "",
+                    "description": "Sequence identity threshold for two sequences to be clustered together. It is th number of identical nucleotides in an alignment divided by the full length of the shorter sequence.",
                     "fa_icon": "fas fa-object-group"
                 }
             },
@@ -201,19 +201,19 @@
                 "annot_score": {
                     "type": "boolean",
                     "default": false,
-                    "description": "",
+                    "description": "BLAST bit score. Set to 'integer' when in use. A normaized value that measures sequence similarity independent of query sequence length and database size. A score of less than 50 indicates a poor alignment.",
                     "fa_icon": "fas fa-clipboard"
                 },
                 "annot_eval": {
                     "type": "number",
                     "default": 0.00001,
-                    "description": "",
+                    "description": "BLAST E-value. Number of hits one can 'expect' to see by chance when searching a database of a particular size.",
                     "fa_icon": "fas fa-clipboard"
                 },
                 "annot_sens": {
                     "type": "string",
                     "default": "very-sensitive",
-                    "description": "",
+                    "description": "Flag for alignment sensitivity that is used by DIAMOND. Either default, fast, mid-sensitive, sensitive, more-sensitive, very-sensitive or ultra-sensitive. Longer reads require higher sensitivity.",
                     "fa_icon": "fas fa-clipboard"
                 },
                 "hmmdir": {
