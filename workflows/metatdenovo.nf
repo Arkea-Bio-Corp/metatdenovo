@@ -53,17 +53,17 @@ include { EGGNOG_DOWNLOAD                  } from '../modules/local/eggnog/downl
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK     } from '../subworkflows/local/input_check'
-include { BT2_ALIGN       } from './bowtie_align'
-include { CDHITEST        } from './cd_hit_est'
-include { DEDUPE          } from './dedupe'
-include { MAPPY           } from './eggnog'
-include { HMMERTIME       } from './hmmscan'
-include { KRAKEN_ID       } from './kraken2'
-include { SALMONY         } from './salmon'
-include { RRNA_REMOVE     } from './sortmerna'
-include { LONGORF_PREDICT } from './transdecoder'
-include { TRIMMYTRIM      } from './trim_galore'
-include { TRINITY_TRIN    } from './trinity'
+// include { BT2_ALIGN       } from '../bowtie_align.nf'
+// include { CDHITEST        } from './cd_hit_est'
+// include { DEDUPE          } from './dedupe'
+// include { MAPPY           } from './eggnog'
+// include { HMMERTIME       } from './hmmscan'
+// include { KRAKEN_ID       } from './kraken2'
+// include { SALMONY         } from './salmon'
+// include { RRNA_REMOVE     } from './sortmerna'
+// include { LONGORF_PREDICT } from './transdecoder'
+// include { TRIMMYTRIM      } from './trim_galore'
+// include { TRINITY_TRIN    } from './trinity'
 
 //
 // SUBWORKFLOW: Consisting of local modules
@@ -83,8 +83,6 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/main'
-include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/main'
-include { BOWTIE2_BUILD               } from '../modules/nf-core/bowtie2/build/main'
 include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/main'
 include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/main'
 include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/main'
@@ -94,10 +92,6 @@ include { TRANSDECODER_LONGORF        } from '../modules/nf-core/transdecoder/lo
 include { TRANSDECODER_PREDICT        } from '../modules/nf-core/transdecoder/predict/main'
 include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/main'
 include { TRINITY                     } from '../modules/nf-core/trinity/main'
-
-//
-// SUBWORKFLOWS: Installed directly from nf-core/modules
-//
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

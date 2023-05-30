@@ -440,12 +440,6 @@
             "$ref": "#/definitions/bbnorm_options"
         },
         {
-            "$ref": "#/definitions/digital_normalization_options"
-        },
-        {
-            "$ref": "#/definitions/assembler_options"
-        },
-        {
             "$ref": "#/definitions/orf_caller_options"
         },
         {
