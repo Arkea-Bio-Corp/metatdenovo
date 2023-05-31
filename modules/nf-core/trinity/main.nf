@@ -1,6 +1,6 @@
 process TRINITY {
     tag "$meta.id"
-    label 'process_macbook'
+    label 'process_medium'
 
     conda "bioconda::trinity=2.15.1"
     container "quay.io/biocontainers/trinity:2.15.1--h6ab5fc9_2"

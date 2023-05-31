@@ -74,6 +74,7 @@ include { MULTIQC                     } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/'
+include { BBMAP_REPAIR                } from '../modules/nf-core/bbmap/repair/'
 include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/'
 include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/'
@@ -158,15 +159,16 @@ workflow METATDENOVO {
     // Step 6
     // Deduplication with Dedupe
     // 
-    BBMAP_DEDUPE(SORTMERNA.out.reads)
+    BBMAP_REPAIR(SORTMERNA.out.reads)
+    BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
     // Step 7
     // Filter by taxa with Kraken2
     // 
-    db_ch   = Channel.fromPath(params.database, checkIfExists: true)
-    KRAKEN2_KRAKEN2(BBMAP_DEDUPE.out.reads, db_ch, true, true)
-    ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
+    // db_ch   = Channel.fromPath(params.database, checkIfExists: true)
+    // KRAKEN2_KRAKEN2(BBMAP_DEDUPE.out.reads, db_ch, true, true)
+    // ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
 
 
     // Step 8
