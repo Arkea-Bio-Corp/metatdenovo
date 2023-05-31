@@ -141,7 +141,9 @@ workflow METATDENOVO {
     // Step 2 Multi QC of raw reads
 
     // Step 3 Trim Galore!
-    // TRIMMYTRIM()
+    //
+    TRIMGALORE(ch_fastq[0])
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
@@ -175,14 +177,18 @@ workflow METATDENOVO {
     // Step 7
     // Filter by taxa with Kraken2
     // 
-    // db_ch   = Channel.fromPath(params.database, checkIfExists: true)
-    // KRAKEN2_KRAKEN2(BBMAP_DEDUPE.out.reads, db_ch, true, true)
-    // ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
+    k2db_ch   = Channel.fromPath(params.kraken2db, checkIfExists: true)
+    // adjust metamap to switch to single end
+    reads_ch = BBMAP_DEDUPE.out.reads.map{ [[id: it[0].id, single_end: true], it[1]] }
+    KRAKEN2_KRAKEN2(reads_ch, k2db_ch, true, true)
+    ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
 
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
-    // TRINITY_TRIN()
+    // 
+    TRINITY(KRAKEN2_KRAKEN2.out.unclassified_reads_fastq)
+    ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // Step 9a 
     // concatenate multiple assemblies

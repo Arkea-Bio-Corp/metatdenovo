@@ -24,6 +24,7 @@ process BBMAP_DEDUPE {
     def all_reads      = meta.single_end ? "in=${reads[0]}" : "in1=${reads[0]} in2=${reads[1]}"
     def deduped_reads  = meta.single_end ? "out=${prefix}.fastq.gz" : "out=${prefix}_deduped.fastq.gz"
     """
+    echo $meta > meta.log
     dedupe.sh \\
         -Xmx${task.memory.toGiga()}g \\
         $all_reads \\
