@@ -33,13 +33,14 @@ process KRAKEN2_KRAKEN2 {
     def unclassified_option = save_output_fastqs ? "--unclassified-out ${unclassified}" : ""
     def readclassification_option = save_reads_assignment ? "--output ${prefix}.kraken2.classifiedreads.txt" : "--output /dev/null"
     def compress_reads_command = save_output_fastqs ? "pigz -p $task.cpus *.fastq" : ""
+    def gzswitch = reads.toString().endsWith(".gz") ? "--gzip-compressed" : ""
 
     """
     kraken2 \\
         --db $db \\
         --threads $task.cpus \\
         --report ${prefix}.kraken2.report.txt \\
-        --gzip-compressed \\
+        $gzswitch \\
         $unclassified_option \\
         $classified_option \\
         $readclassification_option \\

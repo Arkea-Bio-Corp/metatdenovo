@@ -45,7 +45,6 @@ include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
 include { HMMER_HMMSCAN                    } from '../modules/local/hmmscan/main'
 include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mapper'
-include { EGGNOG_DOWNLOAD                  } from '../modules/local/eggnog/download'
 
 //include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
 
@@ -79,23 +78,24 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules (mostly)
 //
 
-include { CAT_FASTQ 	          	  } from '../modules/nf-core/cat/fastq/'
-include { FASTQC as PRE_TRIM_FQC      } from '../modules/nf-core/fastqc/'
-include { FASTQC as POST_TRIM_FQC     } from '../modules/nf-core/fastqc/'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/'
-include { BOWTIE2_ALIGN               } from '../modules/nf-core/bowtie2/align/'
-include { BBMAP_DEDUPE                } from '../modules/nf-core/bbmap/dedupe/'
-include { BBMAP_REPAIR                } from '../modules/nf-core/bbmap/repair/'
-include { CDHIT_CDHIT                 } from '../modules/nf-core/cdhit/'
-include { KRAKEN2_KRAKEN2             } from '../modules/nf-core/kraken2/'
-include { SALMON_INDEX                } from '../modules/nf-core/salmon/index/'
-include { SALMON_QUANT                } from '../modules/nf-core/salmon/quant/'
-include { SORTMERNA                   } from '../modules/nf-core/sortmerna/'
-include { TRANSDECODER_LONGORF        } from '../modules/nf-core/transdecoder/longorf/'
-include { TRANSDECODER_PREDICT        } from '../modules/nf-core/transdecoder/predict/'
-include { TRIMGALORE                  } from '../modules/nf-core/trimgalore/'
-include { TRINITY                     } from '../modules/nf-core/trinity/'
+include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
+include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
+include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
+include { MULTIQC                           } from '../modules/nf-core/multiqc/'
+include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
+include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
+include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
+include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
+include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
+include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
+include { SALMON_INDEX                      } from '../modules/nf-core/salmon/index/'
+include { SALMON_QUANT                      } from '../modules/nf-core/salmon/quant/'
+include { SORTMERNA                         } from '../modules/nf-core/sortmerna/'
+include { TRANSDECODER_LONGORF              } from '../modules/nf-core/transdecoder/longorf/'
+include { TRANSDECODER_PREDICT              } from '../modules/nf-core/transdecoder/predict/'
+include { TRIMGALORE                        } from '../modules/nf-core/trimgalore/'
+include { TRINITY                           } from '../modules/nf-core/trinity/'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,11 +134,12 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     // Step 1 FastQC
-    // TODO: fix fastQCs:
+    // 
     PRE_TRIM_FQC (ch_fastq[0])
     ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
 
-    // Step 2 Multi QC of raw reads
+    // Step 2* Multi QC of raw reads
+    // * see below
 
     // Step 3 Trim Galore!
     //
@@ -156,7 +157,7 @@ workflow METATDENOVO {
     // 
     index_ch = Channel.fromPath(params.indexdir)
     index = index_ch.map { [[id: 'meta'], it] }
-    BOWTIE2_ALIGN({TRIMGALORE.out.reads}, index, true, false)
+    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // Step 5 
@@ -177,17 +178,17 @@ workflow METATDENOVO {
     // Step 7
     // Filter by taxa with Kraken2
     // 
-    k2db_ch   = Channel.fromPath(params.kraken2db, checkIfExists: true)
+    k2db_ch   = Channel.fromPath(params.no_archea_db, checkIfExists: true)
     // adjust metamap to switch to single end
     reads_ch = BBMAP_DEDUPE.out.reads.map{ [[id: it[0].id, single_end: true], it[1]] }
-    KRAKEN2_KRAKEN2(reads_ch, k2db_ch, true, true)
-    ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
+    KRKN_NO_ARCH(reads_ch, k2db_ch, true, true)
+    ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    TRINITY(KRAKEN2_KRAKEN2.out.unclassified_reads_fastq)
+    TRINITY(KRKN_NO_ARCH.out.unclassified_reads_fastq)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // Step 9a 
@@ -196,19 +197,34 @@ workflow METATDENOVO {
 
     // Step 9
     // Clustering with CD-HIT-EST to remove redundancies
-    // CDHITEST()
+    // 
+    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
+    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
     // Step 10
     // ORF prediction and translation to peptide seqs with Transdecoder
-    // LONGORF_PREDICT()
+    // 
+    tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
+    ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
+    TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
+    ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
+
 
     // Step 11 --> important!! use reads from after step 5 here
-    // Quantification (salmon, rsem, or bbmap)
-    // SALMONY()
+    // Quantification w/ salmon
+    // 
+    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
+    ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
+    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)
+    ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Step 12 
     // Functional annotation with eggnog-mapper
-    // MAPPY()
+    // 
+    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    // EGGNOG_MAPPER(read_ch, eggnog_ch, eggdbchoice)
+    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Step 13
     // Functional annotation with hmmscan
@@ -216,7 +232,10 @@ workflow METATDENOVO {
 
     // Step 14
     // Kraken2 taxonomical annotation of contigs
-    // KRAKEN_ID()
+    // 
+    k2_arch_db = Channel.fromPath(params.archea_db, checkIfExists: true)
+    KRKN_ARCH(TRANSDECODER_PREDICT.out.cds, k2_arch_db, true, true)
+    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 
     // Step 15
     // MODULE: Collect statistics from mapping analysis
