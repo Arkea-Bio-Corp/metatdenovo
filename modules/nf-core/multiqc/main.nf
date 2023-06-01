@@ -27,6 +27,7 @@ process MULTIQC {
     def extra_config = extra_multiqc_config ? "--config $extra_multiqc_config" : ''
     """
     multiqc \\
+        -d \\
         --force \\
         $args \\
         $config \\

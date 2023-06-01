@@ -135,8 +135,8 @@ workflow METATDENOVO {
 
     // Step 1 FastQC
     // TODO: fix fastQCs:
-    // PRE_TRIM_FQC (ch_fastq[0])
-    // ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
+    PRE_TRIM_FQC (ch_fastq[0])
+    ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
 
     // Step 2 Multi QC of raw reads
 
@@ -148,8 +148,8 @@ workflow METATDENOVO {
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    // POST_TRIM_FQC(TRIMGALORE.out.reads)
-    // ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
+    POST_TRIM_FQC(TRIMGALORE.out.reads)
+    ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
@@ -242,8 +242,8 @@ workflow METATDENOVO {
     ch_methods_description = Channel.value(methods_description)
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    // ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
-    // ch_multiqc_files = ch_multiqc_files.mix(POST_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(POST_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
 
 
     MULTIQC (
