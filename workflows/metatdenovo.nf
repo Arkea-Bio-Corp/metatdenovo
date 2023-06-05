@@ -215,7 +215,7 @@ workflow METATDENOVO {
     // 
     salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)
+    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Step 12 
