@@ -30,6 +30,7 @@ process SORTMERNA {
     fi
     sortmerna \\
         ${'--ref '+fastas.join(' --ref ')} \\
+        --paired_in \\
         --reads ${reads[0]} \\
         --reads ${reads[1]} \\
         --threads $task.cpus \\
