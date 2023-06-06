@@ -1,6 +1,6 @@
 process HMMER_HMMSCAN {
     tag "$meta.id"
-    label 'process_macbook'
+    label 'process_medium'
 
     conda "bioconda::hmmer=3.3.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

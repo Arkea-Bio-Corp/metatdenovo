@@ -1,6 +1,6 @@
 process BOWTIE2_ALIGN {
     tag "$meta.id"
-    label "process_macbook"
+    label "process_medium"
 
     conda "bioconda::bowtie2=2.4.4 bioconda::samtools=1.16.1 conda-forge::pigz=2.6"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -16,7 +16,7 @@ process BOWTIE2_ALIGN {
     output:
     tuple val(meta), path("*.bam")    , emit: bam
     tuple val(meta), path("*.log")    , emit: log
-    tuple val(meta), path("*fastq.gz"), emit: fastq, optional:true
+    tuple val(meta), path("*fastq.gz"), emit: fastq, optional:false
     path  "versions.yml"              , emit: versions
 
     when:

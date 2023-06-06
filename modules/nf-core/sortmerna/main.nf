@@ -1,6 +1,6 @@
 process SORTMERNA {
     tag "$meta.id"
-    label "process_macbook"
+    label "process_medium"
 
     conda "bioconda::sortmerna=4.3.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -30,6 +30,7 @@ process SORTMERNA {
     fi
     sortmerna \\
         ${'--ref '+fastas.join(' --ref ')} \\
+        --paired_in \\
         --reads ${reads[0]} \\
         --reads ${reads[1]} \\
         --threads $task.cpus \\

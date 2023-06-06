@@ -1,6 +1,6 @@
 process TRINITY {
     tag "$meta.id"
-    label 'process_macbook'
+    label 'process_high'
 
     conda "bioconda::trinity=2.15.1"
     container "quay.io/biocontainers/trinity:2.15.1--h6ab5fc9_2"
@@ -10,6 +10,7 @@ process TRINITY {
 
     output:
     tuple val(meta), path("*.fa.gz")       , emit: transcript_fasta
+    tuple val(meta), path('*.log')         , emit: log, optional: true
     path "versions.yml"                    , emit: versions
 
     when:
@@ -40,13 +41,14 @@ process TRINITY {
     ${reads_args} \\
     --output ${prefix}_trinity \\
     --CPU $task.cpus \\
-    $args
+    $args \\
+    &> ${prefix}.trinity.log
 
     gzip -cf ${prefix}_trinity.Trinity.fasta > ${prefix}.fa.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        trinity: \$(echo \$(Trinity --version | head -n 1 2>&1) | sed 's/^Trinity version: Trinity-v//' ))
+        trinity: \$(echo \$(Trinity --version | head -n 1 2>&1) | sed 's/^Trinity version: Trinity-v//' )
     END_VERSIONS
 
     # Need to only take the first line of --version since it will warn about not being up-to-date and this messes up the version.yaml.

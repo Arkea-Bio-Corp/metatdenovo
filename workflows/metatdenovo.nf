@@ -9,18 +9,6 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowMetatdenovo.initialise(params, log)
 
-// Validate parameters for orf_caller:
-ORF_CALLER_PRODIGAL     = 'prodigal'
-ORF_CALLER_PROKKA       = 'prokka'
-
-// Validate parameters for assembler:
-MEGAHIT   = 'megahit'
-
-def valid_params = [
-    orf_caller      : [ ORF_CALLER_PRODIGAL, ORF_CALLER_PROKKA ],
-    assembler       : [ MEGAHIT ]
-]
-
 // Check input path parameters to see if they exist
 def checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -30,20 +18,6 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 
 // set an empty multiqc channel
 ch_multiqc_files = Channel.empty()
-
-// If the user supplied hmm files, we will run hmmsearch and then rank the results.
-// Create a channel for hmm files.
-ch_hmmrs = Channel.empty()
-if ( params.hmmdir ) {
-    Channel
-        .fromPath(params.hmmdir + params.hmmpattern)
-        .set { ch_hmmrs }
-} else if ( params.hmmfiles ) {
-    Channel
-        .of( params.hmmfiles.split(',') )
-        .map { [ file(it) ] }
-        .set { ch_hmmrs }
-}
 
 
 /*
@@ -66,27 +40,33 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // MODULE: local
 //
-include { MEGAHIT_INTERLEAVED              } from '../modules/local/megahit/interleaved'
-include { COLLECT_FEATURECOUNTS            } from '../modules/local/collect_featurecounts'
 include { COLLECT_STATS                    } from '../modules/local/collect_stats'
 include { UNPIGZ as UNPIGZ_CONTIGS         } from '../modules/local/unpigz'
 include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
+include { HMMER_HMMSCAN                    } from '../modules/local/hmmscan/main'
+include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mapper'
+
 //include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { INPUT_CHECK     } from '../subworkflows/local/input_check'
+// include { BT2_ALIGN       } from '../bowtie_align.nf'
+// include { CDHITEST        } from './cd_hit_est'
+// include { DEDUPE          } from './dedupe'
+// include { MAPPY           } from './eggnog'
+// include { HMMERTIME       } from './hmmscan'
+// include { KRAKEN_ID       } from './kraken2'
+// include { SALMONY         } from './salmon'
+// include { RRNA_REMOVE     } from './sortmerna'
+// include { LONGORF_PREDICT } from './transdecoder'
+// include { TRIMMYTRIM      } from './trim_galore'
+// include { TRINITY_TRIN    } from './trinity'
 
 //
 // SUBWORKFLOW: Consisting of local modules
 //
-//include { EGGNOG            } from '../subworkflows/local/eggnog'
-include { HMMCLASSIFY       } from '../subworkflows/local/hmmclassify'
-include { PROKKA_SUBSETS    } from '../subworkflows/local/prokka_subsets'
-include { DIGINORM          } from '../subworkflows/local/diginorm'
-include { FASTQC_TRIMGALORE } from '../subworkflows/local/fastqc_trimgalore'
-include { PRODIGAL          } from '../subworkflows/local/prodigal'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,22 +75,28 @@ include { PRODIGAL          } from '../subworkflows/local/prodigal'
 */
 
 //
-// MODULE: Installed directly from nf-core/modules
+// MODULE: Installed directly from nf-core/modules (mostly)
 //
-include { BBMAP_INDEX                                } from '../modules/nf-core/bbmap/index/main'
-include { BBMAP_ALIGN                                } from '../modules/nf-core/bbmap/align/main'
-include { BBMAP_BBNORM                               } from '../modules/nf-core/bbmap/bbnorm/main'
-include { SEQTK_MERGEPE                              } from '../modules/nf-core/seqtk/mergepe/main'
-include { SUBREAD_FEATURECOUNTS as FEATURECOUNTS_CDS } from '../modules/nf-core/subread/featurecounts/main'
-include { CAT_FASTQ 	          	                 } from '../modules/nf-core/cat/fastq/main'
-include { FASTQC                                     } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                                    } from '../modules/nf-core/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS                } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
-//
-// SUBWORKFLOWS: Installed directly from nf-core/modules
-//
-include { BAM_SORT_STATS_SAMTOOLS                    } from '../subworkflows/nf-core/bam_sort_stats_samtools/main'
+include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
+include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
+include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
+include { MULTIQC                           } from '../modules/nf-core/multiqc/'
+include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
+include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
+include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
+include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
+include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
+include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
+include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
+include { SALMON_INDEX                      } from '../modules/nf-core/salmon/index/'
+include { SALMON_QUANT                      } from '../modules/nf-core/salmon/quant/'
+include { SORTMERNA                         } from '../modules/nf-core/sortmerna/'
+include { TRANSDECODER_LONGORF              } from '../modules/nf-core/transdecoder/longorf/'
+include { TRANSDECODER_PREDICT              } from '../modules/nf-core/transdecoder/predict/'
+include { TRIMGALORE                        } from '../modules/nf-core/trimgalore/'
+include { TRINITY                           } from '../modules/nf-core/trinity/'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,241 +134,124 @@ workflow METATDENOVO {
     .set { ch_fastq }
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
+    // Step 1 FastQC
     // 
-    // MODULE: Concatenate FastQ files from same sample if required
+    PRE_TRIM_FQC (ch_fastq[0])
+    ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
+
+    // Step 2* Multi QC of raw reads
+    // * see below
+
+    // Step 3 Trim Galore!
     //
-    CAT_FASTQ (
-        ch_fastq.multiple
-    )
-    .reads
-    .mix(ch_fastq.single)
-    .set { ch_cat_fastq }
+    TRIMGALORE(ch_fastq[0])
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
 
-    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
-
-    // Step 1 + Step 3: FastQC and Trim Galore!
-    // SUBWORKFLOW: Read QC and trim adapters
+    // 
+    // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    FASTQC_TRIMGALORE (
-        ch_cat_fastq,
-        params.skip_fastqc || params.skip_qc,
-        params.skip_trimming
-    )
-    ch_versions = ch_versions.mix(FASTQC_TRIMGALORE.out.versions)
-
-    ch_collect_stats = ch_cat_fastq.collect { it[0].id }.map { [ [ id:"${params.assembler}.${params.orf_caller}" ], it ] }
-    if ( params.skip_trimming ) {
-        ch_collect_stats
-            .map { [ it[0], it[1], [] ] }
-            .set { ch_collect_stats }
-    } else {
-        ch_collect_stats
-            .combine(FASTQC_TRIMGALORE.out.trim_log.collect { it[1][0] }.map { [ it ] })
-            .set { ch_collect_stats }
-    }
+    POST_TRIM_FQC(TRIMGALORE.out.reads)
+    ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
-    // Subworkflow? bowtie2
+    // 
+    index_ch = Channel.fromPath(params.indexdir)
+    index = index_ch.map { [[id: 'meta'], it] }
+    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index, true, false)
+    ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
-    // Step 5
+    // Step 5 
     // rRNA remove (sortmerna)
-    //
+    // 
+    silva_ch   = Channel.fromPath(params.silva_reference, checkIfExists: true)
+    rna_idx = Channel.fromPath(params.rna_idx, checkIfExists: true)
+    SORTMERNA(BOWTIE2_ALIGN.out.fastq, silva_ch, rna_idx)
+    ch_versions = ch_versions.mix(SORTMERNA.out.versions)
 
     // Step 6
-    // Deduplication with BBdup
-    //
+    // Deduplication with Dedupe
+    // 
+    BBMAP_REPAIR(SORTMERNA.out.reads)
+    BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
+    BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
     // Step 7
     // Filter by taxa with Kraken2
-    //
+    // 
+    k2db_ch   = Channel.fromPath(params.no_archaea_db, checkIfExists: true)
+    KRKN_NO_ARCH(BBMAP_REFORMAT.out.reads, k2db_ch, true, true)
+    ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
-    // MODULE: Run BBDuk to clean out whatever sequences the user supplied via params.sequence_filter
-    //
-    if ( params.sequence_filter ) {
-        BBMAP_BBDUK ( FASTQC_TRIMGALORE.out.reads, params.sequence_filter )
-        ch_clean_reads  = BBMAP_BBDUK.out.reads
-        ch_bbduk_logs = BBMAP_BBDUK.out.log.collect { it[1] }.map { [ it ] }
-        ch_versions   = ch_versions.mix(BBMAP_BBDUK.out.versions)
-        ch_collect_stats
-            .combine(ch_bbduk_logs)
-            .set {ch_collect_stats}
-        ch_multiqc_files = ch_multiqc_files.mix(BBMAP_BBDUK.out.log.collect{it[1]}.ifEmpty([]))
-    } else {
-        ch_clean_reads  = FASTQC_TRIMGALORE.out.reads
-        ch_bbduk_logs = Channel.empty()
-        ch_collect_stats
-            .map { [ it[0], it[1], it[2], [] ] }
-            .set { ch_collect_stats }
-    }
-
-    //
-    // MODULE: Interleave sequences for assembly
-    //
-    // DL & DDL: We can probably not deal with single end input
-    ch_interleaved = Channel.empty()
-    if ( ! params.assembly ) {
-        SEQTK_MERGEPE(ch_clean_reads)
-        ch_interleaved = SEQTK_MERGEPE.out.reads
-        ch_versions    = ch_versions.mix(SEQTK_MERGEPE.out.versions)
-    }
 
     // Step 8
-    // SUBWORKFLOW: Perform digital normalization. There are two options: khmer or BBnorm. The latter is faster.
-    //
-    ch_pe_reads_to_assembly = Channel.empty()
-    ch_se_reads_to_assembly = Channel.empty()
+    // Merge reads, normalize, and assemble with Trinity
+    // 
+    TRINITY(KRKN_NO_ARCH.out.unclassified_reads_fastq)
+    ch_versions = ch_versions.mix(TRINITY.out.versions)
 
-    if ( ! params.assembly ) {
-        if ( params.diginorm ) {
-            DIGINORM(ch_interleaved.collect { meta, fastq -> fastq }, [], 'all_samples')
-            ch_versions = ch_versions.mix(DIGINORM.out.versions)
-            ch_pe_reads_to_assembly = DIGINORM.out.pairs
-            ch_se_reads_to_assembly = DIGINORM.out.singles
-        } else if ( params.bbnorm) {
-                BBMAP_BBNORM(ch_interleaved.collect { meta, fastq -> fastq }.map {[ [id:'all_samples', single_end:true], it ] } )
-                ch_pe_reads_to_assembly = BBMAP_BBNORM.out.fastq.map { it[1] }
-                ch_se_reads_to_assembly = Channel.empty()
-        } else {
-            ch_pe_reads_to_assembly = ch_interleaved.map { meta, fastq -> fastq }
-            ch_se_reads_to_assembly = Channel.empty()
-        }
-    }
+    // Step 9a 
+    // concatenate multiple assemblies
+    // CAT_CAT() module? should we make a subworkflow for this?
 
     // Step 9
-    // MODULE: Run Megahit on all interleaved fastq files
-    //
-    if ( params.assembly ) {
-        Channel
-            .value ( [ [ id: 'user_assembly' ], file(params.assembly) ] )
-            .set { ch_assembly_contigs }
-    } else if ( params.assembler == MEGAHIT ) {
-        MEGAHIT_INTERLEAVED(
-            ch_pe_reads_to_assembly.collect().ifEmpty([]),
-            ch_se_reads_to_assembly.collect().ifEmpty([]),
-            'megahit_assembly'
-        )
-        MEGAHIT_INTERLEAVED.out.contigs
-            .map { [ [ id: 'megahit' ], it ] }
-            .set { ch_assembly_contigs }
-        ch_versions = ch_versions.mix(MEGAHIT_INTERLEAVED.out.versions)
-    }
+    // Clustering with CD-HIT-EST to remove redundancies
+    // 
+    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
+    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
     // Step 10
-    // Clustering with CD-HIT-EST
-    // (for concatenating multiple assemblies)
-    //
+    // ORF prediction and translation to peptide seqs with Transdecoder
+    // 
+    tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
+    ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
+    TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
+    ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
-    // Step 11
-    // Call ORFs
-    //
-    ch_gff = Channel.empty()
-    ch_aa  = Channel.empty()
 
-    //
-    // SUBWORKFLOW: Run PROKKA_SUBSETS on assmebly output, but split the fasta file in chunks of 10 MB, then concatenate and compress output.
-    //
-    if ( params.orf_caller == ORF_CALLER_PROKKA ) {
-        PROKKA_SUBSETS(ch_assembly_contigs)
-        UNPIGZ_GFF(PROKKA_SUBSETS.out.gff.map { [ [id: "${params.orf_caller}.${it[0].id}"], it[1] ] })
-        ch_versions      = ch_versions.mix(PROKKA_SUBSETS.out.versions)
-        ch_gff           = UNPIGZ_GFF.out.unzipped
-        ch_aa            = PROKKA_SUBSETS.out.faa
-        ch_multiqc_files = ch_multiqc_files.mix(PROKKA_SUBSETS.out.prokka_log.collect{it[1]}.ifEmpty([]))
-    }
+    // Step 11 --> important!! use reads from after step 5 here
+    // Quantification w/ salmon
+    // 
+    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
+    ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
+    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)   
+    ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
-    //
-    // MODULE: Run PRODIGAL on assembly output.
-    //
-    if ( params.orf_caller == ORF_CALLER_PRODIGAL ) {
-        PRODIGAL( ch_assembly_contigs.map { [ [id: 'prodigal.megahit' ], it[1] ] } )
-        UNPIGZ_GFF(PRODIGAL.out.gff.map { [ [id: "${params.orf_caller}.${it[0].id}"], it[1] ] })
-        ch_gff          = UNPIGZ_GFF.out.unzipped
-        ch_aa           = PRODIGAL.out.faa
-        ch_versions     = ch_versions.mix(PRODIGAL.out.versions)
-    }
-
-    //
-    // MODULE: Create a BBMap index
-    //
-    BBMAP_INDEX(ch_assembly_contigs.map { it[1] })
-    ch_versions   = ch_versions.mix(BBMAP_INDEX.out.versions)
-
-    //
-    // MODULE: Call BBMap with the index once per sample
-    //
-    BBMAP_ALIGN ( ch_clean_reads, BBMAP_INDEX.out.index )
-    ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions)
-
-    // Step 12
-    // Quantification (salmon, rsem, or bbmap)
-    //
+    // Step 12 
+    // Functional annotation with eggnog-mapper
+    // 
+    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Step 13
-    // SUBWORKFLOW: classify ORFs with a set of hmm files
-    //
-    ch_hmmrs
-        .combine(ch_aa)
-        .map { [ [id: it[0].baseName ], it[0], it[2] ] }
-        .set { ch_hmmclassify }
-    HMMCLASSIFY ( ch_hmmclassify )
-    ch_versions = ch_versions.mix(HMMCLASSIFY.out.versions)
-
-    //
-    // MODULE: FeatureCounts. Create a table for each samples that provides raw counts as result of the alignment.
-    //
-
-    BAM_SORT_STATS_SAMTOOLS ( BBMAP_ALIGN.out.bam, ch_assembly_contigs.map { it[1] } )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS.out.versions)
-
-    // if ( orf_caller == 
-    BAM_SORT_STATS_SAMTOOLS.out.bam
-        .combine(ch_gff.map { it[1] } )
-        .set { ch_featurecounts }
-
-    ch_collect_stats
-        .combine(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect { it[1]}.map { [ it ] })
-        .set { ch_collect_stats }
-
-    FEATURECOUNTS_CDS ( ch_featurecounts)
-    ch_versions       = ch_versions.mix(FEATURECOUNTS_CDS.out.versions)
-
-    //
-    // MODULE: Collect featurecounts output counts in one table
-    //
-    FEATURECOUNTS_CDS.out.counts
-        .collect() { it[1] }
-        .map { [ [ id:'all_samples'], it ] }
-        .set { ch_collect_feature }
-
-    COLLECT_FEATURECOUNTS ( ch_collect_feature )
-    ch_versions           = ch_versions.mix(COLLECT_FEATURECOUNTS.out.versions)
-    ch_fcs_for_stats      = COLLECT_FEATURECOUNTS.out.counts.collect { it[1]}.map { [ it ] }
-    ch_fcs_for_summary    = COLLECT_FEATURECOUNTS.out.counts.map { it[1]}
-    ch_collect_stats
-        .combine(ch_fcs_for_stats)
-        .set { ch_collect_stats }
-
-    //
-    // SUBWORKFLOW: pass along ORF-called amino acid sequences
-    //
-    ch_aa
-        .map { [ it[0], [] ] }
-        .set { ch_merge_tables }
+    // Functional annotation with hmmscan
+    // 
+    hmmerdir   = Channel.fromPath(params.hmmerdir, checkIfExists: true)
+    hmmerfile  = Channel.value(params.hmmer_file_name)
+    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
 
     // Step 14
-    // Kraken2 taxonomical annotation
-    //
+    // Kraken2 taxonomical annotation of contigs
+    // 
+    // adjust metamap to switch to single end
+    trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+    KRKN_ARCH(trans_cds, k2_arch_db, true, true)
+    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 
     // Step 15
     // MODULE: Collect statistics from mapping analysis
     //
-    ch_collect_stats
-        .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
-        .set { ch_collect_stats }
+    // ch_collect_stats
+    //     .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
+    //     .set { ch_collect_stats }
 
-    COLLECT_STATS(ch_collect_stats)
-    ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
+    // COLLECT_STATS(ch_collect_stats)
+    // ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -398,9 +267,8 @@ workflow METATDENOVO {
     ch_methods_description = Channel.value(methods_description)
 
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(BAM_SORT_STATS_SAMTOOLS.out.idxstats.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(FEATURECOUNTS_CDS.out.summary.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(POST_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
 
 
     MULTIQC (
@@ -414,6 +282,6 @@ workflow METATDENOVO {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
+    THE END :^)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
