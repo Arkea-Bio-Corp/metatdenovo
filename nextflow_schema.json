@@ -99,7 +99,7 @@
                 "rna_idx": {
                     "type": "string",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/sortmerna_rna_index/",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/idx/",
                     "description": "Directory storing RNA indexes used in SortMeRNA",
                     "fa_icon": "fas fa-folder-open"
                 },
