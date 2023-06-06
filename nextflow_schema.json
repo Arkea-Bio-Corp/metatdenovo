@@ -86,7 +86,7 @@
                     "format": "directory-path",
                     "default": "s3://arkeabio-nextflow-general/meta-t_reference/bowtie2_index/",
                     "description": "Directory storing the indexed bowtie2 database for the host.",
-                    "fa_icon": "fas fa-user-tie"
+                    "fa_icon": "fas fa-folder"
                 }
             }
         },
@@ -107,7 +107,7 @@
                     "format": "directory-path",
                     "default": "s3://arkeabio-nextflow-general/meta-t_reference/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
                     "description": "Direct path to reference SILVA fasta file.",
-                    "fa_icon": "fas fa-location-crosshairs"
+                    "fa_icon": "fas fa-asterisk"
                 }
             }
         },
@@ -132,7 +132,7 @@
                     "type": "number",
                     "default": 0.5,
                     "description": "A scoring value between 0 and 1 that acts as a threshold for labeling an individual sequence a specific taxonomy ID. The classifier will adjust the label up the taxonomic tree until the label meets or exceeds the set threshold.",
-                    "fa_icon": "fas fa-person-harassing"
+                    "fa_icon": "fas fa-crosshairs"
                 },
                 "archaea_db": {
                     "type": "string",
