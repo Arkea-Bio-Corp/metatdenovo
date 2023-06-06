@@ -10,6 +10,7 @@ process TRINITY {
 
     output:
     tuple val(meta), path("*.fa.gz")       , emit: transcript_fasta
+    tuple val(meta), path('*.log')         , emit: log, optional: true
     path "versions.yml"                    , emit: versions
 
     when:
@@ -40,7 +41,8 @@ process TRINITY {
     ${reads_args} \\
     --output ${prefix}_trinity \\
     --CPU $task.cpus \\
-    $args
+    $args \\
+    &> ${prefix}.trinity.log
 
     gzip -cf ${prefix}_trinity.Trinity.fasta > ${prefix}.fa.gz
 

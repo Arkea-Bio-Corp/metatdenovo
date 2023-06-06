@@ -86,6 +86,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/du
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
+include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
 include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
 include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
@@ -173,15 +174,14 @@ workflow METATDENOVO {
     // 
     BBMAP_REPAIR(SORTMERNA.out.reads)
     BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
+    BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
     // Step 7
     // Filter by taxa with Kraken2
     // 
-    k2db_ch   = Channel.fromPath(params.no_archea_db, checkIfExists: true)
-    // adjust metamap to switch to single end
-    reads_ch = BBMAP_DEDUPE.out.reads.map{ [[id: it[0].id, single_end: true], it[1]] }
-    KRKN_NO_ARCH(reads_ch, k2db_ch, true, true)
+    k2db_ch   = Channel.fromPath(params.no_archaea_db, checkIfExists: true)
+    KRKN_NO_ARCH(BBMAP_REFORMAT.out.reads, k2db_ch, true, true)
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
 
@@ -237,8 +237,10 @@ workflow METATDENOVO {
     // Step 14
     // Kraken2 taxonomical annotation of contigs
     // 
-    k2_arch_db = Channel.fromPath(params.archea_db, checkIfExists: true)
-    KRKN_ARCH(TRANSDECODER_PREDICT.out.cds, k2_arch_db, true, true)
+    // adjust metamap to switch to single end
+    trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+    KRKN_ARCH(trans_cds, k2_arch_db, true, true)
     ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 
     // Step 15
