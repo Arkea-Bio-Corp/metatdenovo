@@ -6,7 +6,7 @@
     "type": "object",
     "definitions": {
         "input_output_options": {
-            "title": "Input/output options",
+            "title": "Input/output",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
@@ -48,7 +48,7 @@
             }
         },
         "trimming_options": {
-            "title": "Trimming options",
+            "title": "Trimming",
             "type": "object",
             "fa_icon": "fas fa-hand-scissors",
             "description": "Options for Trim Galore!",
@@ -76,7 +76,7 @@
             }
         },
         "host_seq_removal_options": {
-            "title": "Host sequence filtering options",
+            "title": "Host sequence filtering",
             "type": "object",
             "description": "Bowtie2 options, used for removing host sequences.",
             "fa_icon": "fas fa-user-tie",
@@ -91,9 +91,10 @@
             }
         },
         "ribosomal_rna_options": {
-            "title": "Options for filtering out rRNA sequences in the data.",
+            "title": "rRNA filtering",
+            "description": "Options for filtering out rRNA sequences in the data.",
             "type": "object",
-            "fa_icon": "fas filter",
+            "fa_icon": "fas fa-filter",
             "properties": {
                 "rna_idx": {
                     "type": "string",
@@ -112,7 +113,7 @@
             }
         },
         "taxonomy_assignment_options": {
-            "title": "Taxonomy assignment options",
+            "title": "Taxonomy assignment",
             "type": "object",
             "description": "Options that are specific to Kraken2 for taxonomy assignment",
             "properties": {
@@ -154,7 +155,7 @@
             "fa_icon": "fas fa-dna"
         },
         "assembly_options": {
-            "title": "de novo assembly options",
+            "title": "de novo assembly",
             "type": "object",
             "description": "Options that are specific to Trinity for assembly of RNA-Seq data",
             "properties": {
@@ -180,7 +181,7 @@
             "fa_icon": "fas fa-puzzle-piece"
         },
         "clustering_options": {
-            "title": "Clustering options",
+            "title": "Clustering",
             "type": "object",
             "description": "Options that are specific to CD-HIT for clustering sequences by similarity",
             "properties": {
@@ -200,7 +201,8 @@
             "fa_icon": "fas fa-object-group"
         },
         "functional_annotation_options": {
-            "title": "Functional annotation options for eggnog and hmmscan.",
+            "title": "Functional annotation",
+            "description": "Functional annotation options for eggnog and hmmscan.",
             "type": "object",
             "properties": {
                 "eggnogdir": {
