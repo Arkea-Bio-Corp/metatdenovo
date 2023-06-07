@@ -48,6 +48,9 @@ process TRIMGALORE {
         ${prefix}_1.fastq${gzswitch} \\
         ${prefix}_2.fastq${gzswitch}
 
+    mv ${prefix}_1_val_1.fq.gz ${prefix}_1_trim.fq.gz
+    mv ${prefix}_2_val_2.fq.gz ${prefix}_2_trim.fq.gz
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
