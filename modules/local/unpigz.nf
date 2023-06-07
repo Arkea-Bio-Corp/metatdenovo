@@ -1,6 +1,5 @@
 process UNPIGZ {
     tag "$file"
-    label 'process_low'
 
     // conda (params.enable_conda ? "pigz=2.3.4" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

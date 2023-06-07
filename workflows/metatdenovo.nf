@@ -46,23 +46,10 @@ include { UNPIGZ as UNPIGZ_GFF             } from '../modules/local/unpigz'
 include { HMMER_HMMSCAN                    } from '../modules/local/hmmscan/main'
 include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mapper'
 
-//include { MERGE_TABLES                     } from '../modules/local/merge_summary_tables'
-
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK     } from '../subworkflows/local/input_check'
-// include { BT2_ALIGN       } from '../bowtie_align.nf'
-// include { CDHITEST        } from './cd_hit_est'
-// include { DEDUPE          } from './dedupe'
-// include { MAPPY           } from './eggnog'
-// include { HMMERTIME       } from './hmmscan'
-// include { KRAKEN_ID       } from './kraken2'
-// include { SALMONY         } from './salmon'
-// include { RRNA_REMOVE     } from './sortmerna'
-// include { LONGORF_PREDICT } from './transdecoder'
-// include { TRIMMYTRIM      } from './trim_galore'
-// include { TRINITY_TRIN    } from './trinity'
 
 //
 // SUBWORKFLOW: Consisting of local modules
@@ -243,15 +230,6 @@ workflow METATDENOVO {
     KRKN_ARCH(trans_cds, k2_arch_db, true, true)
     ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 
-    // Step 15
-    // MODULE: Collect statistics from mapping analysis
-    //
-    // ch_collect_stats
-    //     .map { [ it[0], it[1], it[2], it[3], it[4], it[5], [] ] }
-    //     .set { ch_collect_stats }
-
-    // COLLECT_STATS(ch_collect_stats)
-    // ch_versions     = ch_versions.mix(COLLECT_STATS.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')

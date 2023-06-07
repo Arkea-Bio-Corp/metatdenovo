@@ -1,6 +1,5 @@
 process BBMAP_REFORMAT {
     tag "$meta.id"
-    label 'process_medium'
 
     conda "bioconda::bbmap=39.01"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -1,6 +1,5 @@
 process CAT_CONTIGS {
     tag "${meta.id}-${db_name}"
-    label 'process_high'
 
     conda "bioconda::cat=4.6 bioconda::diamond=2.0.6"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

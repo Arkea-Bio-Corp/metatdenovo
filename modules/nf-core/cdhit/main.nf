@@ -1,6 +1,5 @@
 process CDHIT_CDHIT {
     tag "$meta.id"
-    label 'process_medium'
 
     conda "bioconda::cd-hit=4.8.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
