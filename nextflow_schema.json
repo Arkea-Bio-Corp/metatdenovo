@@ -106,8 +106,8 @@
                 "silva_reference": {
                     "type": "string",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/SILVA_138.1_SSURef_NR99_tax_silva.fasta",
-                    "description": "Direct path to reference SILVA fasta file.",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/smr_v4.3_default_db.fasta",
+                    "description": "Direct path to reference SILVA fasta file. Default is SortMeRNA shipped reference.",
                     "fa_icon": "fas fa-asterisk"
                 }
             }
