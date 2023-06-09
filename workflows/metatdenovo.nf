@@ -148,6 +148,8 @@ workflow METATDENOVO {
     BOWTIE2_ALIGN(TRIMGALORE.out.reads, index, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
+    // SPLIT ~~~~
+
     // Step 5 
     // rRNA remove (sortmerna)
     // 
@@ -156,21 +158,23 @@ workflow METATDENOVO {
     SORTMERNA(BOWTIE2_ALIGN.out.fastq, silva_ch, rna_idx)
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
 
-    // Step 6
-    // Deduplication with Dedupe
-    // 
-    BBMAP_REPAIR(SORTMERNA.out.reads)
-    BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
-    BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
-    // Step 7
+    // Step 6
     // Filter by taxa with Kraken2
     // 
     k2db_ch   = Channel.fromPath(params.no_archaea_db, checkIfExists: true)
     KRKN_NO_ARCH(BBMAP_REFORMAT.out.reads, k2db_ch, true, true)
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
+    // RECOMBINE ~~~~
+
+    // Step 7
+    // Deduplication with Dedupe
+    // 
+    BBMAP_REPAIR()
+    BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
+    BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
@@ -200,6 +204,7 @@ workflow METATDENOVO {
     // Step 11 --> important!! use reads from after step 5 here
     // Quantification w/ salmon
     // 
+    // TODO: switch to kraken2 output
     salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
     SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)   
