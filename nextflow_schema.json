@@ -47,6 +47,20 @@
                 }
             }
         },
+        "split_options": {
+            "title": "Nextflow fastq Split Size",
+            "type": "object",
+            "fa_icon": "fas fa-solid fa-arrows-split-up-and-left",
+            "description": "Used for splitting inputs among multiple instances for SortMeRNA and Kraken2 (no archaea).",
+            "properties": {
+                "split_size": {
+                    "type": "integer",
+                    "default": 25000,
+                    "description": "The size of the fastqs the pipeline splits the inputs into.",
+                    "fa_icon": "fas fa-ice-cream"
+                }
+            }
+        },
         "trimming_options": {
             "title": "Trimming",
             "type": "object",

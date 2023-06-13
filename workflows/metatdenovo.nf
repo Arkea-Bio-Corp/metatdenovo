@@ -149,29 +149,43 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // SPLIT ~~~~
+    BOWTIE2_ALIGN.out.fastq
+        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
+        // TODO: make pe dynamic with meta.single_end
+        .splitFastq(by: params.split_size, 
+                    pe: true, file: true, 
+                    compress: true, decompress: true)
+        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+        .set { split_reads }
 
     // Step 5 
     // rRNA remove (sortmerna)
     // 
-    silva_ch   = Channel.fromPath(params.silva_reference, checkIfExists: true)
-    rna_idx = Channel.fromPath(params.rna_idx, checkIfExists: true)
-    SORTMERNA(BOWTIE2_ALIGN.out.fastq, silva_ch, rna_idx)
+    silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
+    rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
+    SORTMERNA(split_reads, silva_ch, rna_idx)
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
 
 
     // Step 6
     // Filter by taxa with Kraken2
     // 
-    k2db_ch   = Channel.fromPath(params.no_archaea_db, checkIfExists: true)
-    KRKN_NO_ARCH(BBMAP_REFORMAT.out.reads, k2db_ch, true, true)
+    k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
+    KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
     // RECOMBINE ~~~~
+    KRKN_NO_ARCH.out.unclassified_reads_fastq
+        .groupTuple()
+        .map { [it[0], it[1].flatten()] }
+        .set { collectedFastqs }
+    CAT_FASTQ(collectedFastqs)
+    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
 
     // Step 7
     // Deduplication with Dedupe
     // 
-    BBMAP_REPAIR()
+    BBMAP_REPAIR(CAT_FASTQ.out.reads)
     BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
     BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
@@ -204,10 +218,9 @@ workflow METATDENOVO {
     // Step 11 --> important!! use reads from after step 5 here
     // Quantification w/ salmon
     // 
-    // TODO: switch to kraken2 output
     salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)   
+    SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Step 12 
