@@ -50,7 +50,7 @@
         "split_options": {
             "title": "Nextflow fastq Split Size",
             "type": "object",
-            "fa_icon": "fas fa-arrows-left-right",
+            "fa_icon": "fas fa-ice-cream",
             "description": "Used for splitting inputs among multiple instances for SortMeRNA and Kraken2 (no archaea).",
             "properties": {
                 "split_size": {
