@@ -144,8 +144,7 @@ workflow METATDENOVO {
     // Remove host sequences, bowtie2 align to Bos taurus
     // 
     index_ch = Channel.fromPath(params.indexdir)
-    index = index_ch.map { [[id: 'meta'], it] }
-    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index, true, false)
+    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // SPLIT ~~~~
@@ -193,7 +192,7 @@ workflow METATDENOVO {
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    TRINITY(KRKN_NO_ARCH.out.unclassified_reads_fastq)
+    TRINITY(BBMAP_REFORMAT.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // Step 9a 
@@ -215,10 +214,10 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
 
-    // Step 11 --> important!! use reads from after step 5 here
+    // Step 11 
     // Quantification w/ salmon
     // 
-    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
+    salmon_ind = SALMON_INDEX(CAT_FASTQ.out.reads).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
