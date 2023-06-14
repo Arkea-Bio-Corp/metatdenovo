@@ -144,38 +144,55 @@ workflow METATDENOVO {
     // Remove host sequences, bowtie2 align to Bos taurus
     // 
     index_ch = Channel.fromPath(params.indexdir)
-    index = index_ch.map { [[id: 'meta'], it] }
-    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index, true, false)
+    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
+
+    // SPLIT ~~~~
+    BOWTIE2_ALIGN.out.fastq
+        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
+        // TODO: make pe dynamic with meta.single_end
+        .splitFastq(by: params.split_size, 
+                    pe: true, file: true, 
+                    compress: true, decompress: true)
+        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+        .set { split_reads }
 
     // Step 5 
     // rRNA remove (sortmerna)
     // 
-    silva_ch   = Channel.fromPath(params.silva_reference, checkIfExists: true)
-    rna_idx = Channel.fromPath(params.rna_idx, checkIfExists: true)
-    SORTMERNA(BOWTIE2_ALIGN.out.fastq, silva_ch, rna_idx)
+    silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
+    rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
+    SORTMERNA(split_reads, silva_ch, rna_idx)
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
 
+
     // Step 6
+    // Filter by taxa with Kraken2
+    // 
+    k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
+    KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
+    ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
+
+    // RECOMBINE ~~~~
+    KRKN_NO_ARCH.out.unclassified_reads_fastq
+        .groupTuple()
+        .map { [it[0], it[1].flatten()] }
+        .set { collectedFastqs }
+    CAT_FASTQ(collectedFastqs)
+    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
+
+    // Step 7
     // Deduplication with Dedupe
     // 
-    BBMAP_REPAIR(SORTMERNA.out.reads)
+    BBMAP_REPAIR(CAT_FASTQ.out.reads)
     BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
     BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
-    // Step 7
-    // Filter by taxa with Kraken2
-    // 
-    k2db_ch   = Channel.fromPath(params.no_archaea_db, checkIfExists: true)
-    KRKN_NO_ARCH(BBMAP_REFORMAT.out.reads, k2db_ch, true, true)
-    ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
-
-
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    TRINITY(KRKN_NO_ARCH.out.unclassified_reads_fastq)
+    TRINITY(BBMAP_REFORMAT.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // Step 9a 
@@ -197,12 +214,12 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
 
-    // Step 11 --> important!! use reads from after step 5 here
+    // Step 11 
     // Quantification w/ salmon
     // 
-    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
+    salmon_ind = SALMON_INDEX(CAT_FASTQ.out.reads).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(SORTMERNA.out.reads, salmon_ind)   
+    SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Step 12 
