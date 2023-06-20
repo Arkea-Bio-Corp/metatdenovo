@@ -161,20 +161,17 @@ workflow METATDENOVO {
     // Step 5 
     // rRNA remove (bowtie)
     // 
-    // silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
-    // rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
-    // SORTMERNA(split_reads, silva_ch, rna_idx)
-    // ch_versions = ch_versions.mix(SORTMERNA.out.versions)
-    bowtie_rna_idx = Channel.value(file(params.bowtie_rna_idx, checkIfExists: true))
-    BOWTIE2_RNA(split_reads, bowtie_rna_idx, true, false)
+    silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
+    rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
+    SORTMERNA(split_reads, silva_ch, rna_idx)
+    ch_versions = ch_versions.mix(SORTMERNA.out.versions)
 
 
     // Step 6
     // Filter by taxa with Kraken2
     // 
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
-    // KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
-    KRKN_NO_ARCH(BOWTIE2_RNA.out.fastq, k2db_ch, true, true)
+    KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
 
     // RECOMBINE ~~~~
