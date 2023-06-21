@@ -41,7 +41,6 @@ process TRINITY {
     --output ${prefix}_trinity \\
     --CPU $task.cpus \\
     $args \\
-    --no_distributed_trinity_exec \\
     &> ${prefix}.trinity.log
 
     gzip -cf ${prefix}_trinity.Trinity.fasta > ${prefix}.fa.gz
