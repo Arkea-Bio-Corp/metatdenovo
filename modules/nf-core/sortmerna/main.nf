@@ -34,6 +34,7 @@ process SORTMERNA {
         --reads ${reads[1]} \\
         --threads $task.cpus \\
         --index 0 \\
+        --idx-dir ${index_dir} \\
         --workdir . \\
         --aligned rRNA_reads \\
         --fastx \\
