@@ -81,6 +81,12 @@
                     "help_text": "Quality and adapter trimming are performed in a single pass.",
                     "fa_icon": "fas fa-cut"
                 },
+                "trim_n": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Trim Ns from either side of a read.",
+                    "fa_icon": "fas fa-cut"
+                },
                 "trim_nextseq": {
                     "type": "boolean",
                     "description": "Instructs Trim Galore to apply the --nextseq=X option, to trim based on quality after removing poly-G tails.",
