@@ -40,8 +40,7 @@ process TRINITY {
     ${reads_args} \\
     --output ${prefix}_trinity \\
     --CPU $task.cpus \\
-    $args \\
-    &> ${prefix}.trinity.log
+    $args 
 
     gzip -cf ${prefix}_trinity.Trinity.fasta > ${prefix}.fa.gz
 
