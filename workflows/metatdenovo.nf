@@ -71,7 +71,6 @@ include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
-include { BOWTIE2_RNA                       } from '../modules/nf-core/bowtie2/rrna/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
 include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
@@ -84,6 +83,7 @@ include { SORTMERNA                         } from '../modules/nf-core/sortmerna
 include { TRANSDECODER_LONGORF              } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT              } from '../modules/nf-core/transdecoder/predict/'
 include { TRIMGALORE                        } from '../modules/nf-core/trimgalore/'
+include { TRIMMOMATIC                       } from '../modules/nf-core/trimmomatic'
 include { TRINITY                           } from '../modules/nf-core/trinity/'
 
 /*
@@ -132,20 +132,26 @@ workflow METATDENOVO {
 
     // Step 3 Trim Galore!
     //
-    TRIMGALORE(ch_fastq[0])
-    ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+    // TRIMGALORE(ch_fastq[0])
+    // ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+
+    // Step 3 trimmomatic
+    //
+    TRIMMOMATIC(ch_fastq[0])
+    ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
+
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    POST_TRIM_FQC(TRIMGALORE.out.reads)
+    POST_TRIM_FQC(TRIMMOMATIC.out.trimmed_reads)
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
     // 
     index_ch = Channel.fromPath(params.indexdir)
-    BOWTIE2_ALIGN(TRIMGALORE.out.reads, index_ch, true, false)
+    BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // SPLIT ~~~~
