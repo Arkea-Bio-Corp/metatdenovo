@@ -55,7 +55,7 @@
             "properties": {
                 "split_size": {
                     "type": "integer",
-                    "default": 25000,
+                    "default": 1000000,
                     "description": "The size of the fastqs the pipeline splits the inputs into.",
                     "fa_icon": "fas fa-ice-cream"
                 }

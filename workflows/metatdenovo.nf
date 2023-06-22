@@ -71,6 +71,7 @@ include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
+include { BOWTIE2_RNA                       } from '../modules/nf-core/bowtie2/rrna/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
 include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
@@ -158,7 +159,7 @@ workflow METATDENOVO {
         .set { split_reads }
 
     // Step 5 
-    // rRNA remove (sortmerna)
+    // rRNA remove (bowtie)
     // 
     silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
     rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))

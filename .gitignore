@@ -12,6 +12,7 @@ eggnog
 kofam/
 .nextflow.log
 outdir*/
+null/
 # local storage, data on google drive
 localdata/
 .vscode/
