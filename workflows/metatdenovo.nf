@@ -137,9 +137,9 @@ workflow METATDENOVO {
 
     // Step 3 trimmomatic
     //
-    TRIMMOMATIC(ch_fastq[0])
+    adapter_path = Channel.fromPath(params.adapter_fa, checkIfExists: true)
+    TRIMMOMATIC(ch_fastq[0], adapter_path)
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
-
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads

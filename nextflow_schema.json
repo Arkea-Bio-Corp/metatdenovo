@@ -73,6 +73,12 @@
                     "description": "The parameter string to be used in trimmomatic.",
                     "fa_icon": "fas fa-cut"
                 },
+                "adapter_fa": {
+                    "type": "string",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/TruSeq3-PE-2.fa",
+                    "description": "File containing adapter sequences to be trimmed by trimmomatic.",
+                    "fa_icon": "fas fa-cut"
+                },
                 "trim_length": {
                     "type": "integer",
                     "default": 50,
