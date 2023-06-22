@@ -67,6 +67,12 @@
             "fa_icon": "fas fa-hand-scissors",
             "description": "Options for Trim Galore!",
             "properties": {
+                "trimmo": {
+                    "type": "string",
+                    "default": "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:50",
+                    "description": "The parameter string to be used in trimmomatic.",
+                    "fa_icon": "fas fa-cut"
+                },
                 "trim_length": {
                     "type": "integer",
                     "default": 50,
