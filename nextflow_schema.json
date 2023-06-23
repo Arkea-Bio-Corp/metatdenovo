@@ -69,7 +69,7 @@
             "properties": {
                 "trimmo": {
                     "type": "string",
-                    "default": "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:50",
+                    "default": "ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:50",
                     "description": "The parameter string to be used in trimmomatic.",
                     "fa_icon": "fas fa-cut"
                 },
