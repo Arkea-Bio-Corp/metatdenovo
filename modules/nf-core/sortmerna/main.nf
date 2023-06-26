@@ -22,16 +22,14 @@ process SORTMERNA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def all_reads = meta.single_end ? 
+        "--reads ${reads}" :
+        "--reads ${reads[0]} --reads ${reads[1]}"
     """
-    if  [[ ! ${reads[0]} == *.gz ]]; then
-        echo "Input files must be gzipped fastqs."
-        exit 1
-    fi
     sortmerna \\
         ${'--ref '+fastas.join(' --ref ')} \\
         --paired_in \\
-        --reads ${reads[0]} \\
-        --reads ${reads[1]} \\
+        $all_reads \\
         --threads $task.cpus \\
         --index 0 \\
         --idx-dir ${index_dir} \\

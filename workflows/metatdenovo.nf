@@ -149,9 +149,18 @@ workflow METATDENOVO {
     POST_TRIM_FQC(TRIMMOMATIC.out.trimmed_reads)
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
+    //
+    // Bonus step -> merge paired reads into one
+    //
     BBMAP_MERGE(TRIMMOMATIC.out.trimmed_reads)
-    merged_reads = BBMAP_MERGE.out.merged.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    merged_reads = BBMAP_MERGE.out.merged.map{ [[id: it[0].id, single_end: true], it[1]]}
+    BBMAP_MERGE.out.merged.countFastq().view()
     ch_versions = ch_versions.mix(BBMAP_MERGE.out.versions)
+
+    // run this through FastQC
+    POST_MERGE_FQC(merged_reads)
+    ch_versions = ch_versions.mix(POST_MERGE_FQC.out.versions)
+
 
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
@@ -162,11 +171,11 @@ workflow METATDENOVO {
 
     // SPLIT ~~~~
     BOWTIE2_ALIGN.out.fastq
-        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
-        // TODO: make pe dynamic with meta.single_end
+        .map { [it.get(0), it.get(1)] }
+        // TODO: make whole process & pe dynamic with meta.single_end
         .splitFastq(by: params.split_size, file: true, 
                     compress: true, decompress: true)
-        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+        // .map{ [ it.get(0), [it.get(1), it.get(2)] ]} remap paired end files
         .set { split_reads }
 
     // Step 5 
@@ -191,13 +200,14 @@ workflow METATDENOVO {
         .map { [it[0], it[1].flatten()] }
         .set { collectedFastqs }
     CAT_FASTQ(collectedFastqs)
+    CAT_FASTQ.out.reads.countFastq().view()
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
 
     // Step 7
     // Deduplication with Dedupe
     // 
-    BBMAP_REPAIR(CAT_FASTQ.out.reads)
-    BBMAP_DEDUPE(BBMAP_REPAIR.out.reads)
+    // BBMAP_REPAIR(CAT_FASTQ.out.reads)
+    BBMAP_DEDUPE(CAT_FASTQ.out.reads)
     BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
 
@@ -205,11 +215,8 @@ workflow METATDENOVO {
     // Merge reads, normalize, and assemble with Trinity
     // 
     TRINITY(BBMAP_REFORMAT.out.reads)
+    TRINITY.out.transcript_fasta.countFasta().view()
     ch_versions = ch_versions.mix(TRINITY.out.versions) 
-
-    // Step 9a 
-    // concatenate multiple assemblies
-    // CAT_CAT() module? should we make a subworkflow for this?
 
     // Step 9
     // Clustering with CD-HIT-EST to remove redundancies
@@ -224,7 +231,6 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
     TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
     ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
-
 
     // Step 11 
     // Quantification w/ salmon
@@ -276,6 +282,7 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
 
 
     MULTIQC (
