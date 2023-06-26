@@ -155,6 +155,13 @@
                     "description": "Display all taxa in the final report, even if no reads are assigned to/under them. Useful for comparing samples.",
                     "fa_icon": "fas fa-dna"
                 },
+                "memmapping": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Tell Kraken2 to load database into memory or not.",
+                    "help_text": "Setting to true is MUCH faster for parallelized pipelines (like this one).",
+                    "fa_icon": "fas fa-brain"
+                },
                 "use_names": {
                     "type": "boolean",
                     "default": true,
