@@ -68,12 +68,14 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
 include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
+include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
 include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
+include { BBMAP_MERGE                       } from '../modules/nf-core/bbmap/merge/'
 include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
 include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
@@ -147,19 +149,22 @@ workflow METATDENOVO {
     POST_TRIM_FQC(TRIMMOMATIC.out.trimmed_reads)
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
+    BBMAP_MERGE(TRIMMOMATIC.out.trimmed_reads)
+    merged_reads = BBMAP_MERGE.out.merged.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    ch_versions = ch_versions.mix(BBMAP_MERGE.out.versions)
+
     // Step 4
     // Remove host sequences, bowtie2 align to Bos taurus
     // 
     index_ch = Channel.fromPath(params.indexdir)
-    BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
+    BOWTIE2_ALIGN(merged_reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
 
     // SPLIT ~~~~
     BOWTIE2_ALIGN.out.fastq
         .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
         // TODO: make pe dynamic with meta.single_end
-        .splitFastq(by: params.split_size, 
-                    pe: true, file: true, 
+        .splitFastq(by: params.split_size, file: true, 
                     compress: true, decompress: true)
         .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
         .set { split_reads }
@@ -200,7 +205,7 @@ workflow METATDENOVO {
     // Merge reads, normalize, and assemble with Trinity
     // 
     TRINITY(BBMAP_REFORMAT.out.reads)
-    ch_versions = ch_versions.mix(TRINITY.out.versions)
+    ch_versions = ch_versions.mix(TRINITY.out.versions) 
 
     // Step 9a 
     // concatenate multiple assemblies
