@@ -149,28 +149,27 @@ workflow METATDENOVO {
     POST_TRIM_FQC(TRIMMOMATIC.out.trimmed_reads)
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
+
+    // Step 4
+    // Remove host sequences, bowtie2 align to Bos taurus
+    // 
+    index_ch = Channel.fromPath(params.indexdir)
+    BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
+    ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
+
     //
     // Bonus step -> merge paired reads into one
     //
-    BBMAP_MERGE(TRIMMOMATIC.out.trimmed_reads)
+    BBMAP_MERGE(BOWTIE2_ALIGN.out.fastq)
     merged_reads = BBMAP_MERGE.out.merged.map{ [[id: it[0].id, single_end: true], it[1]]}
-    BBMAP_MERGE.out.merged.countFastq().view()
     ch_versions = ch_versions.mix(BBMAP_MERGE.out.versions)
 
     // run this through FastQC
     POST_MERGE_FQC(merged_reads)
     ch_versions = ch_versions.mix(POST_MERGE_FQC.out.versions)
 
-
-    // Step 4
-    // Remove host sequences, bowtie2 align to Bos taurus
-    // 
-    index_ch = Channel.fromPath(params.indexdir)
-    BOWTIE2_ALIGN(merged_reads, index_ch, true, false)
-    ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
-
     // SPLIT ~~~~
-    BOWTIE2_ALIGN.out.fastq
+    merged_reads
         .map { [it.get(0), it.get(1)] }
         // TODO: make whole process & pe dynamic with meta.single_end
         .splitFastq(by: params.split_size, file: true, 
@@ -200,7 +199,6 @@ workflow METATDENOVO {
         .map { [it[0], it[1].flatten()] }
         .set { collectedFastqs }
     CAT_FASTQ(collectedFastqs)
-    CAT_FASTQ.out.reads.countFastq().view()
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
 
     // Step 7
