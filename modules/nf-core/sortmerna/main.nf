@@ -26,32 +26,60 @@ process SORTMERNA {
     def all_reads = meta.single_end ? 
         "--reads ${reads}" :
         "--reads ${reads[0]} --reads ${reads[1]}"
-    """
-    sortmerna \\
-        ${'--ref '+fastas.join(' --ref ')} \\
-        --paired_in \\
-        $all_reads \\
-        --threads $task.cpus \\
-        --index 0 \\
-        --idx-dir ${index_dir} \\
-        --workdir . \\
-        --aligned rRNA_reads \\
-        --fastx \\
-        --other non_rRNA_reads \\
-        --out2 \\
-        $args
+    if (meta.single_end) {
+        """
+        sortmerna \\
+            ${'--ref '+fastas.join(' --ref ')} \\
+            $all_reads \\
+            --threads $task.cpus \\
+            --index 0 \\
+            --idx-dir ${index_dir} \\
+            --workdir . \\
+            --aligned rRNA_reads \\
+            --fastx \\
+            --other non_rRNA_reads \\
+            $args
 
-    mv non_rRNA_reads_fwd.f*q.gz ${prefix}_1.non_rRNA.fastq.gz
-    mv non_rRNA_reads_rev.f*q.gz ${prefix}_2.non_rRNA.fastq.gz
-    mv rRNA_reads.log ${prefix}.sortmerna.log
+        mv non_rRNA_reads.f*q.gz ${prefix}.non_rRNA.fastq.gz
+        mv rRNA_reads.log ${prefix}.sortmerna.log
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sortmerna: \$(echo \$(sortmerna --version 2>&1) | sed 's/^.*SortMeRNA version //; s/ Build Date.*\$//')
-    END_VERSIONS
-    cat <<-END_COUNTS > counts.yml
-    "${task.process}_${task.index}":
-        \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
-    END_COUNTS
-    """
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            sortmerna: \$(echo \$(sortmerna --version 2>&1) | sed 's/^.*SortMeRNA version //; s/ Build Date.*\$//')
+        END_VERSIONS
+        cat <<-END_COUNTS > counts.yml
+        "${task.process}_${task.index}":
+            \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
+        END_COUNTS
+        """
+    } else {
+        """
+        sortmerna \\
+            ${'--ref '+fastas.join(' --ref ')} \\
+            --paired_in \\
+            $all_reads \\
+            --threads $task.cpus \\
+            --index 0 \\
+            --idx-dir ${index_dir} \\
+            --workdir . \\
+            --aligned rRNA_reads \\
+            --fastx \\
+            --other non_rRNA_reads \\
+            --out2 \\
+            $args
+
+        mv non_rRNA_reads_fwd.f*q.gz ${prefix}_1.non_rRNA.fastq.gz
+        mv non_rRNA_reads_rev.f*q.gz ${prefix}_2.non_rRNA.fastq.gz
+        mv rRNA_reads.log ${prefix}.sortmerna.log
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            sortmerna: \$(echo \$(sortmerna --version 2>&1) | sed 's/^.*SortMeRNA version //; s/ Build Date.*\$//')
+        END_VERSIONS
+        cat <<-END_COUNTS > counts.yml
+        "${task.process}_${task.index}":
+            \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
+        END_COUNTS
+        """
+    }
 }
