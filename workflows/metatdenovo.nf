@@ -248,21 +248,21 @@ workflow METATDENOVO {
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
-    // // Step 12 
-    // // Functional annotation with eggnog-mapper
-    // // 
-    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // Step 12 
+    // Functional annotation with eggnog-mapper
+    // 
+    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
-    // // Step 13
-    // // Functional annotation with hmmscan
-    // // 
-    // hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    // hmmerfile  = Channel.value(params.hmmerfile)
-    // HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
-    // ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+    // Step 13
+    // Functional annotation with hmmscan
+    // 
+    hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
+    hmmerfile  = Channel.value(params.hmmerfile)
+    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
 
     // Step 14
     // Kraken2 taxonomical annotation of contigs
