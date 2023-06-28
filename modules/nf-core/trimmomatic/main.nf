@@ -16,6 +16,7 @@ process TRIMMOMATIC {
     tuple val(meta), path("*.log")                     , emit: log
     tuple val(meta), path("*.summary")                 , emit: summary
     path "versions.yml"                                , emit: versions
+    path "counts.yml"                                  , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -44,5 +45,9 @@ process TRIMMOMATIC {
     "${task.process}":
         trimmomatic: \$(trimmomatic -version)
     END_VERSIONS
+    cat <<-END_COUNTS > counts.yml
+    "${task.process}":
+        \$(zcat ${prefix}.paired.trim_*.fastq.gz | grep -c "@" | awk '{print \$1/2}')
+    END_COUNTS
     """
 }

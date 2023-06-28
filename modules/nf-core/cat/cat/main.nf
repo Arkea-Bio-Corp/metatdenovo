@@ -13,6 +13,7 @@ process CAT_CAT {
     output:
     tuple val(meta), path("${prefix}"), emit: file_out
     path "versions.yml"               , emit: versions
+    path "counts.yml"                 , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -46,17 +47,9 @@ process CAT_CAT {
     "${task.process}":
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
-    """
-
-    stub:
-    def file_list = files_in.collect { it.toString() }
-    prefix   = task.ext.prefix ?: "${meta.id}${file_list[0].substring(file_list[0].lastIndexOf('.'))}"
-    """
-    touch $prefix
-
-    cat <<-END_VERSIONS > versions.yml
+    cat <<-END_COUNTS > counts.yml
     "${task.process}":
-        pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
-    END_VERSIONS
+        \$(zcat ${prefix} | grep -c "@" )
+    END_COUNTS
     """
 }

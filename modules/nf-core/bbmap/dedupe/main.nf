@@ -13,6 +13,8 @@ process BBMAP_DEDUPE {
     tuple val(meta), path('*.fastq.gz'), emit: reads
     tuple val(meta), path('*.log')     , emit: log
     path "versions.yml"                , emit: versions
+    path "counts.yml"                  , emit: readcounts
+
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,5 +37,9 @@ process BBMAP_DEDUPE {
     "${task.process}":
         bbmap: \$(bbversion.sh | grep -v "Duplicate cpuset")
     END_VERSIONS
+    cat <<-END_COUNTS > counts.yml
+    "${task.process}":
+        \$(zcat *.fastq.gz | grep -c "@" )
+    END_COUNTS
     """
 }

@@ -71,6 +71,7 @@ include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
@@ -100,6 +101,7 @@ def multiqc_report = []
 workflow METATDENOVO {
 
     ch_versions = Channel.empty()
+    ch_read_counts = Channel.empty()
 
     // STEP 0: Validate input
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
@@ -142,6 +144,7 @@ workflow METATDENOVO {
     adapter_path = Channel.fromPath(params.adapter_fa, checkIfExists: true)
     TRIMMOMATIC(ch_fastq[0], adapter_path)
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
+    ch_read_counts = ch_read_counts.mix(TRIMMOMATIC.out.readcounts)
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
@@ -156,13 +159,15 @@ workflow METATDENOVO {
     index_ch = Channel.fromPath(params.indexdir)
     BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
+    ch_read_counts = ch_read_counts.mix(BOWTIE2_ALIGN.out.readcounts)
 
     //
-    // Bonus step -> merge paired reads into one
+    // Bonus step -> merge paired reads into single end
     //
     BBMAP_MERGE(BOWTIE2_ALIGN.out.fastq)
     merged_reads = BBMAP_MERGE.out.merged.map{ [[id: it[0].id, single_end: true], it[1]]}
     ch_versions = ch_versions.mix(BBMAP_MERGE.out.versions)
+    ch_read_counts = ch_read_counts.mix(BBMAP_MERGE.out.readcounts)
 
     // run this through FastQC
     POST_MERGE_FQC(merged_reads)
@@ -184,7 +189,7 @@ workflow METATDENOVO {
     rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
     SORTMERNA(split_reads, silva_ch, rna_idx)
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
-
+    ch_read_counts = ch_read_counts.mix(SORTMERNA.out.readcounts)
 
     // Step 6
     // Filter by taxa with Kraken2
@@ -192,6 +197,7 @@ workflow METATDENOVO {
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
     KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
+    ch_read_counts = ch_read_counts.mix(KRKN_NO_ARCH.out.readcounts)
 
     // RECOMBINE ~~~~
     KRKN_NO_ARCH.out.unclassified_reads_fastq
@@ -200,19 +206,22 @@ workflow METATDENOVO {
         .set { collectedFastqs }
     CAT_FASTQ(collectedFastqs)
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
+    ch_read_counts = ch_read_counts.mix(CAT_FASTQ.out.readcounts)
 
     // Step 7
     // Deduplication with Dedupe
     // 
     // BBMAP_REPAIR(CAT_FASTQ.out.reads)
     BBMAP_DEDUPE(CAT_FASTQ.out.reads)
-    BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
+    // BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
+    ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.yml'))
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    TRINITY(BBMAP_REFORMAT.out.reads)
+    TRINITY(BBMAP_DEDUPE.out.reads)
     TRINITY.out.transcript_fasta.countFasta().view()
     ch_versions = ch_versions.mix(TRINITY.out.versions) 
 
