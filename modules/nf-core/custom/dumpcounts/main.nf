@@ -2,6 +2,7 @@ process CUSTOM_DUMPCOUNTS {
 
     input:
     path collated_reads
+    tuple val(meta), val("null")
 
     output:
     path "counts.yml", emit: readcounts

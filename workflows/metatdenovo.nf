@@ -216,7 +216,8 @@ workflow METATDENOVO {
     // BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.yml'))
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.yml'), 
+                                                 BBMAP_DEDUPE.out.meta)
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
@@ -247,21 +248,21 @@ workflow METATDENOVO {
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
-    // Step 12 
-    // Functional annotation with eggnog-mapper
-    // 
-    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // // Step 12 
+    // // Functional annotation with eggnog-mapper
+    // // 
+    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
-    // Step 13
-    // Functional annotation with hmmscan
-    // 
-    hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    hmmerfile  = Channel.value(params.hmmerfile)
-    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
-    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+    // // Step 13
+    // // Functional annotation with hmmscan
+    // // 
+    // hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
+    // hmmerfile  = Channel.value(params.hmmerfile)
+    // HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+    // ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
 
     // Step 14
     // Kraken2 taxonomical annotation of contigs
@@ -274,7 +275,8 @@ workflow METATDENOVO {
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+        ch_versions.unique().collectFile(name: 'collated_versions.yml'),
+        BBMAP_DEDUPE.out.meta
     )
 
     // Step 2
@@ -296,7 +298,8 @@ workflow METATDENOVO {
         ch_multiqc_files.collect(),
         ch_multiqc_config.toList(),
         ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
+        ch_multiqc_logo.toList(),
+        BBMAP_DEDUPE.out.meta
     )
     multiqc_report = MULTIQC.out.report.toList()
 }

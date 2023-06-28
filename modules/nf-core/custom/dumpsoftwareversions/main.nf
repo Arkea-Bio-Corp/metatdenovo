@@ -8,6 +8,7 @@ process CUSTOM_DUMPSOFTWAREVERSIONS {
 
     input:
     path versions
+    tuple val(meta), val("null")
 
     output:
     path "software_versions.yml"    , emit: yml
