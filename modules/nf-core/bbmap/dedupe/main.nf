@@ -14,7 +14,7 @@ process BBMAP_DEDUPE {
     tuple val(meta), path('*.log')     , emit: log
     tuple val(meta), val("null")       , emit: meta // passing meta tag only to others
     path "versions.yml"                , emit: versions
-    path "counts.yml"                  , emit: readcounts
+    path "counts.txt"                  , emit: readcounts
 
 
     when:
@@ -38,9 +38,9 @@ process BBMAP_DEDUPE {
     "${task.process}":
         bbmap: \$(bbversion.sh | grep -v "Duplicate cpuset")
     END_VERSIONS
-    cat <<-END_COUNTS > counts.yml
+    cat <<-END_COUNTS > counts.txt
     "${task.process}":
-        \$(zcat *.fastq.gz | grep -c "@" )
+        \$(zcat ${prefix}.fastq.gz | grep -c "@" )
     END_COUNTS
     """
 }

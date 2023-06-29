@@ -151,7 +151,7 @@
             "properties": {
                 "report_zero_counts": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Display all taxa in the final report, even if no reads are assigned to/under them. Useful for comparing samples.",
                     "fa_icon": "fas fa-dna"
                 },

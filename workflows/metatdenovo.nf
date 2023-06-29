@@ -72,6 +72,8 @@ include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
+include { CUSTOM_DUMPLOGS as SMR_LOGS       } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPLOGS as KR2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
@@ -80,6 +82,7 @@ include { BBMAP_MERGE                       } from '../modules/nf-core/bbmap/mer
 include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
 include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
+include { MEGAHIT                           } from '../modules/nf-core/megahit/'
 include { SALMON_INDEX                      } from '../modules/nf-core/salmon/index/'
 include { SALMON_QUANT                      } from '../modules/nf-core/salmon/quant/'
 include { SORTMERNA                         } from '../modules/nf-core/sortmerna/'
@@ -188,6 +191,11 @@ workflow METATDENOVO {
     silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
     rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
     SORTMERNA(split_reads, silva_ch, rna_idx)
+    SMR_LOGS(
+        SORTMERNA.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
+        "SortMeRNA",
+        SORTMERNA.out.meta
+    )
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
     ch_read_counts = ch_read_counts.mix(SORTMERNA.out.readcounts)
 
@@ -196,6 +204,11 @@ workflow METATDENOVO {
     // 
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
     KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
+    KR2_LOGS(
+        KRKN_NO_ARCH.out.report_log.collectFile(name: 'collected_logs.txt', newLine: true),
+        "Kraken2_no_archaea",
+        KRKN_NO_ARCH.out.meta
+    )
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
     ch_read_counts = ch_read_counts.mix(KRKN_NO_ARCH.out.readcounts)
 
@@ -216,20 +229,23 @@ workflow METATDENOVO {
     // BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.yml'), 
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.txt'), 
                                                  BBMAP_DEDUPE.out.meta)
 
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    TRINITY(BBMAP_DEDUPE.out.reads)
-    TRINITY.out.transcript_fasta.countFasta().view()
-    ch_versions = ch_versions.mix(TRINITY.out.versions) 
+    // TRINITY(BBMAP_DEDUPE.out.reads)
+    // TRINITY.out.transcript_fasta.countFasta().view()
+    // ch_versions = ch_versions.mix(TRINITY.out.versions)
+    MEGAHIT(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(MEGAHIT.out.versions)
 
     // Step 9
     // Clustering with CD-HIT-EST to remove redundancies
     // 
-    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
+    // CDHIT_CDHIT(TRINITY.out.transcript_fasta)
+    CDHIT_CDHIT(MEGAHIT.out.contigs)
     ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
     // Step 10
@@ -242,7 +258,7 @@ workflow METATDENOVO {
 
     // Step 11 
     // Quantification w/ salmon
-    // 
+    // TODO: double check salmon here? should we be indexing the assembly instead?
     salmon_ind = SALMON_INDEX(CAT_FASTQ.out.reads).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   

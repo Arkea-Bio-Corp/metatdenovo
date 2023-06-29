@@ -17,7 +17,7 @@ process BOWTIE2_ALIGN {
     tuple val(meta), path("*.log")    , emit: log
     tuple val(meta), path("*fastq.gz"), emit: fastq, optional:false
     path "versions.yml"               , emit: versions
-    path "counts.yml"                 , emit: readcounts
+    path "counts.txt"                 , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -67,7 +67,7 @@ process BOWTIE2_ALIGN {
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
-    cat <<-END_COUNTS > counts.yml
+    cat <<-END_COUNTS > counts.txt
     "${task.process}":
         \$(zcat ${prefix}.unmapped_*.fastq.gz | grep -c "@" | awk '{print \$1/2}')
     END_COUNTS
