@@ -14,6 +14,8 @@ process SORTMERNA {
     output:
     tuple val(meta), path("*non_rRNA.fastq.gz"), emit: reads
     tuple val(meta), path("*.log")     , emit: log
+    tuple val(meta), val("null")       , emit: meta // passing meta tag only to others
+    path "*.log"                       , emit: collect_log
     path  "versions.yml"               , emit: versions
     path  "counts.txt"                 , emit: readcounts
 

@@ -17,6 +17,8 @@ process KRAKEN2_KRAKEN2 {
     tuple val(meta), path('*.unclassified{.,_}*'), emit: unclassified_reads_fastq
     tuple val(meta), path('*classifiedreads.txt'), optional:true, emit: classified_reads_assignment
     tuple val(meta), path('*report.txt')         , emit: report
+    tuple val(meta), val("null")                 , emit: meta // passing meta tag only to others
+    path('*report.txt')                          , emit: report_log // only report to collect
     path "versions.yml"                          , emit: versions
     path "counts.txt"                            , emit: readcounts
 

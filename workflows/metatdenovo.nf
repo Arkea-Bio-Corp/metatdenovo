@@ -72,6 +72,8 @@ include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
+include { CUSTOM_DUMPLOGS as SMR_LOGS       } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPLOGS as KR2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
@@ -189,6 +191,11 @@ workflow METATDENOVO {
     silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
     rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
     SORTMERNA(split_reads, silva_ch, rna_idx)
+    SMR_LOGS(
+        SORTMERNA.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
+        "SortMeRNA",
+        SORTMERNA.out.meta
+    )
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
     ch_read_counts = ch_read_counts.mix(SORTMERNA.out.readcounts)
 
@@ -197,6 +204,11 @@ workflow METATDENOVO {
     // 
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
     KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
+    KR2_LOGS(
+        KRKN_NO_ARCH.out.report_log.collectFile(name: 'collected_logs.txt', newLine: true),
+        "Kraken2_no_archaea",
+        KRKN_NO_ARCH.out.meta
+    )
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
     ch_read_counts = ch_read_counts.mix(KRKN_NO_ARCH.out.readcounts)
 
