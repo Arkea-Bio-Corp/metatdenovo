@@ -1,5 +1,5 @@
 reports:
   "**/multiqc_report.html":
     display: MultiQC Report
-  "**/counts.yml":
+  "**/pipeline_counts.txt":
     display: Count Details

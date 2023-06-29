@@ -217,7 +217,7 @@ workflow METATDENOVO {
     // BBMAP_REFORMAT(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.yml'), 
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.txt'), 
                                                  BBMAP_DEDUPE.out.meta)
 
     // Step 8

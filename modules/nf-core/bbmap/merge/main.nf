@@ -15,7 +15,7 @@ process BBMAP_MERGE {
     tuple val(meta), path('*.log')            , emit: log
     tuple val(meta), path('*.ihist.txt')      , emit: ihist
     path "versions.yml"                       , emit: versions
-    path "counts.yml"                         , emit: readcounts
+    path "counts.txt"                         , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -41,7 +41,7 @@ process BBMAP_MERGE {
     "${task.process}":
         bbmap: \$(bbversion.sh | grep -v "Duplicate cpuset")
     END_VERSIONS
-    cat <<-END_COUNTS > counts.yml
+    cat <<-END_COUNTS > counts.txt
     "${task.process}":
         \$(zcat ${prefix}.merged.fq.gz | grep -c "@" )
     END_COUNTS

@@ -13,7 +13,7 @@ process CAT_CAT {
     output:
     tuple val(meta), path("${prefix}"), emit: file_out
     path "versions.yml"               , emit: versions
-    path "counts.yml"                 , emit: readcounts
+    path "counts.txt"                 , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -47,7 +47,7 @@ process CAT_CAT {
     "${task.process}":
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
-    cat <<-END_COUNTS > counts.yml
+    cat <<-END_COUNTS > counts.txt
     "${task.process}":
         \$(zcat ${prefix} | grep -c "@" )
     END_COUNTS
