@@ -223,17 +223,16 @@ workflow METATDENOVO {
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    // TRINITY(BBMAP_DEDUPE.out.reads)
-    // TRINITY.out.transcript_fasta.countFasta().view()
-    // ch_versions = ch_versions.mix(TRINITY.out.versions)
-    MEGAHIT(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(MEGAHIT.out.versions)
+    TRINITY(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(TRINITY.out.versions)
+    // MEGAHIT(BBMAP_DEDUPE.out.reads)
+    // ch_versions = ch_versions.mix(MEGAHIT.out.versions)
 
     // Step 9
     // Clustering with CD-HIT-EST to remove redundancies
     // 
-    // CDHIT_CDHIT(TRINITY.out.transcript_fasta)
-    CDHIT_CDHIT(MEGAHIT.out.contigs)
+    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
+    // CDHIT_CDHIT(MEGAHIT.out.contigs)
     ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
     // Step 10
