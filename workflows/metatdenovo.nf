@@ -255,7 +255,7 @@ workflow METATDENOVO {
     // Step 11 
     // Quantification w/ salmon
     //
-    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta)
+    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
