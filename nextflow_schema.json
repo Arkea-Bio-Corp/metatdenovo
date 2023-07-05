@@ -67,6 +67,18 @@
             "fa_icon": "fas fa-hand-scissors",
             "description": "Options for Trim Galore!",
             "properties": {
+                "trimmo": {
+                    "type": "string",
+                    "default": "ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:50",
+                    "description": "The parameter string to be used in trimmomatic.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "adapter_fa": {
+                    "type": "string",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/TruSeq3-PE-2.fa",
+                    "description": "File containing adapter sequences to be trimmed by trimmomatic.",
+                    "fa_icon": "fas fa-cut"
+                },
                 "trim_length": {
                     "type": "integer",
                     "default": 50,
@@ -139,9 +151,16 @@
             "properties": {
                 "report_zero_counts": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Display all taxa in the final report, even if no reads are assigned to/under them. Useful for comparing samples.",
                     "fa_icon": "fas fa-dna"
+                },
+                "memmapping": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Tell Kraken2 to load database into memory or not.",
+                    "help_text": "Setting to true is MUCH faster for parallelized pipelines (like this one).",
+                    "fa_icon": "fas fa-brain"
                 },
                 "use_names": {
                     "type": "boolean",
@@ -168,7 +187,7 @@
                     "description": "Directory for Kraken2 database WITHOUT archaeal organisms. Includes bacterial, viral, fungal, and protozoan species.",
                     "pattern": "^\\S+",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/no_archaea_db/",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/noarchdb_kl25s4/",
                     "fa_icon": "fas fa-virus-slash"
                 }
             },
@@ -196,6 +215,13 @@
                     "default": 200,
                     "description": "Minimum assembled contig length to report. Lowering will increase number of intermediate files and lead to a more fragmented assembly. Absolute minimum accepted is 100.",
                     "fa_icon": "fas fa-puzzle-piece"
+                },
+                "trinity_salmon": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include a salmon analysis as a part of Trinity run.",
+                    "help_text": "Not necessary in cases where salmon is being run later in pipeline.",
+                    "fa_icon": "fas fa-fish-fins"
                 }
             },
             "fa_icon": "fas fa-puzzle-piece"

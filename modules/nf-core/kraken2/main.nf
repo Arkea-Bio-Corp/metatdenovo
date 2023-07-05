@@ -13,11 +13,14 @@ process KRAKEN2_KRAKEN2 {
     val save_reads_assignment
 
     output:
-    tuple val(meta), path('*.classified{.,_}*')     , optional:true, emit: classified_reads_fastq
-    tuple val(meta), path('*.unclassified{.,_}*')   , optional:false, emit: unclassified_reads_fastq
-    tuple val(meta), path('*classifiedreads.txt')   , optional:true, emit: classified_reads_assignment
-    tuple val(meta), path('*report.txt')                           , emit: report
-    path "versions.yml"                                            , emit: versions
+    tuple val(meta), path('*.classified{.,_}*')  , optional:true, emit: classified_reads_fastq
+    tuple val(meta), path('*.unclassified{.,_}*'), emit: unclassified_reads_fastq
+    tuple val(meta), path('*classifiedreads.txt'), optional:true, emit: classified_reads_assignment
+    tuple val(meta), path('*report.txt')         , emit: report
+    tuple val(meta), val("null")                 , emit: meta // passing meta tag only to others
+    path('*report.txt')                          , emit: report_log // only report to collect
+    path "versions.yml"                          , emit: versions
+    path "counts.txt"                            , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -54,5 +57,9 @@ process KRAKEN2_KRAKEN2 {
         kraken2: \$(echo \$(kraken2 --version 2>&1) | sed 's/^.*Kraken version //; s/ .*\$//')
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
+    cat <<-END_COUNTS > counts.txt
+    "${task.process}_${task.index}":
+        \$(zcat *unclassified* | grep -c "@" )
+    END_COUNTS
     """
 }
