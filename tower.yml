@@ -1,3 +1,9 @@
 reports:
   "**/multiqc_report.html":
     display: MultiQC Report
+  "**/pipeline_counts.txt":
+    display: Count Details
+  "**/Kraken2_no_archaea_logs.txt":
+    display: Kraken2 No Archaea Combined Parallel Report
+  "**/SortMeRNA_logs.txt":
+    display: SortMeRNA Combined Parallel Report
