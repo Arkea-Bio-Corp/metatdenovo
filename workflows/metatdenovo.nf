@@ -235,17 +235,13 @@ workflow METATDENOVO {
     // Step 8
     // Merge reads, normalize, and assemble with Trinity
     // 
-    // TRINITY(BBMAP_DEDUPE.out.reads)
-    // TRINITY.out.transcript_fasta.countFasta().view()
-    // ch_versions = ch_versions.mix(TRINITY.out.versions)
-    MEGAHIT(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(MEGAHIT.out.versions)
+    TRINITY(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // Step 9
     // Clustering with CD-HIT-EST to remove redundancies
     // 
-    // CDHIT_CDHIT(TRINITY.out.transcript_fasta)
-    CDHIT_CDHIT(MEGAHIT.out.contigs)
+    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
     ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
     // Step 10
@@ -258,8 +254,8 @@ workflow METATDENOVO {
 
     // Step 11 
     // Quantification w/ salmon
-    // TODO: double check salmon here? should we be indexing the assembly instead?
-    salmon_ind = SALMON_INDEX(CAT_FASTQ.out.reads).index
+    //
+    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta)
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
     SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
