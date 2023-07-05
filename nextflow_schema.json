@@ -215,6 +215,13 @@
                     "default": 200,
                     "description": "Minimum assembled contig length to report. Lowering will increase number of intermediate files and lead to a more fragmented assembly. Absolute minimum accepted is 100.",
                     "fa_icon": "fas fa-puzzle-piece"
+                },
+                "trinity_salmon": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include a salmon analysis as a part of Trinity run.",
+                    "help_text": "Not necessary in cases where salmon is being run later in pipeline.",
+                    "fa_icon": "fas fa-fish-fins"
                 }
             },
             "fa_icon": "fas fa-puzzle-piece"
