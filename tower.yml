@@ -7,3 +7,5 @@ reports:
     display: Kraken2 No Archaea Combined Parallel Report
   "**/SortMeRNA_logs.txt":
     display: SortMeRNA Combined Parallel Report
+  "**/*fastqc.html":
+    display: Early FastQC results

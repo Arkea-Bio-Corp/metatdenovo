@@ -280,10 +280,10 @@ workflow METATDENOVO {
     // Step 12 
     // Functional annotation with eggnog-mapper
     // 
-    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Step 13
     // Functional annotation with hmmscan
