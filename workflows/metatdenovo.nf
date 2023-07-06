@@ -132,7 +132,7 @@ workflow METATDENOVO {
 
     // Step 1 FastQC
     // 
-    PRE_TRIM_FQC (ch_fastq[0])
+    PRE_TRIM_FQC(ch_fastq[0], "PRE_TRIM")
     ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
 
     // Step 2* Multi QC of raw reads
@@ -170,7 +170,7 @@ workflow METATDENOVO {
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    POST_TRIM_FQC(CAT_FASTQ_TRIM.out.reads)
+    POST_TRIM_FQC(CAT_FASTQ_TRIM.out.reads, "POST_TRIM")
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
 
@@ -191,7 +191,7 @@ workflow METATDENOVO {
     ch_read_counts = ch_read_counts.mix(BBMAP_MERGE.out.readcounts)
 
     // run this through FastQC
-    POST_MERGE_FQC(merged_reads)
+    POST_MERGE_FQC(merged_reads, "POST_MERGE")
     ch_versions = ch_versions.mix(POST_MERGE_FQC.out.versions)
 
     // SPLIT ~~~~
@@ -280,10 +280,10 @@ workflow METATDENOVO {
     // Step 12 
     // Functional annotation with eggnog-mapper
     // 
-    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Step 13
     // Functional annotation with hmmscan
