@@ -66,12 +66,14 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 //
 
 include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
+include { CAT_FASTQ as CAT_FASTQ_TRIM       } from '../modules/nf-core/cat/fastq/'
 include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
+include { CUSTOM_DUMPLOGS as TRM_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { CUSTOM_DUMPLOGS as SMR_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { CUSTOM_DUMPLOGS as KR2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
@@ -82,7 +84,6 @@ include { BBMAP_MERGE                       } from '../modules/nf-core/bbmap/mer
 include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
 include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
-include { MEGAHIT                           } from '../modules/nf-core/megahit/'
 include { SALMON_INDEX                      } from '../modules/nf-core/salmon/index/'
 include { SALMON_QUANT                      } from '../modules/nf-core/salmon/quant/'
 include { SORTMERNA                         } from '../modules/nf-core/sortmerna/'
@@ -137,22 +138,39 @@ workflow METATDENOVO {
     // Step 2* Multi QC of raw reads
     // * see below
 
-    // Step 3 Trim Galore!
-    //
-    // TRIMGALORE(ch_fastq[0])
-    // ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+    // Split, trim, combine, split again...
+    ch_fastq[0]
+        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
+        .splitFastq(by: params.split_size, 
+                    pe: true, file: true, 
+                    compress: true, decompress: true)
+        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+        .set { trim_split }
 
     // Step 3 trimmomatic
     //
-    adapter_path = Channel.fromPath(params.adapter_fa, checkIfExists: true)
-    TRIMMOMATIC(ch_fastq[0], adapter_path)
+    adapter_path = Channel.value(file(params.adapter_fa, checkIfExists: true))
+    TRIMMOMATIC(trim_split, adapter_path)
+    TRM_LOGS(
+        TRIMMOMATIC.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
+        "Trimmomatic",
+        TRIMMOMATIC.out.meta
+    )
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
     ch_read_counts = ch_read_counts.mix(TRIMMOMATIC.out.readcounts)
+
+    // back to one pair of files
+    TRIMMOMATIC.out.trimmed_reads
+        .groupTuple()
+        .map { [it[0], it[1].flatten()] }
+        .set { collected_trims }
+    CAT_FASTQ_TRIM(collected_trims)
+    ch_versions = ch_versions.mix(CAT_FASTQ_TRIM.out.versions)
 
     // 
     // Step 3a FastQC & MultiQC again to compared trimmed reads
     //
-    POST_TRIM_FQC(TRIMMOMATIC.out.trimmed_reads)
+    POST_TRIM_FQC(CAT_FASTQ_TRIM.out.reads)
     ch_versions = ch_versions.mix(POST_TRIM_FQC.out.versions)
 
 
@@ -160,7 +178,7 @@ workflow METATDENOVO {
     // Remove host sequences, bowtie2 align to Bos taurus
     // 
     index_ch = Channel.fromPath(params.indexdir)
-    BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
+    BOWTIE2_ALIGN(CAT_FASTQ_TRIM.out.reads, index_ch, true, false)
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
     ch_read_counts = ch_read_counts.mix(BOWTIE2_ALIGN.out.readcounts)
 
@@ -182,7 +200,6 @@ workflow METATDENOVO {
         // TODO: make whole process & pe dynamic with meta.single_end
         .splitFastq(by: params.split_size, file: true, 
                     compress: true, decompress: true)
-        // .map{ [ it.get(0), [it.get(1), it.get(2)] ]} remap paired end files
         .set { split_reads }
 
     // Step 5 

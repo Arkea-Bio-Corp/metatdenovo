@@ -15,8 +15,10 @@ process TRIMMOMATIC {
     tuple val(meta), path("*.unpaired.trim_*.fastq.gz"), optional:true, emit: unpaired_reads
     tuple val(meta), path("*.log")                     , emit: log
     tuple val(meta), path("*.summary")                 , emit: summary
-    path "versions.yml"                                , emit: versions
-    path "counts.txt"                                  , emit: readcounts
+    tuple val(meta), val("null")       , emit: meta // passing meta tag only to others
+    path "*.log"                       , emit: collect_log
+    path  "versions.yml"               , emit: versions
+    path  "counts.txt"                 , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -46,7 +48,7 @@ process TRIMMOMATIC {
         trimmomatic: \$(trimmomatic -version)
     END_VERSIONS
     cat <<-END_COUNTS > counts.txt
-    "${task.process}":
+    "${task.process}_${task.index}":
         \$(zcat ${prefix}.paired.trim_*.fastq.gz | grep -c "@" | awk '{print \$1/2}')
     END_COUNTS
     """
