@@ -7,8 +7,8 @@ process COUNTS_PLOT {
     tuple val(meta), path(counts_txt)
 
     output:
-    tuple val(meta), path(""), emit: counts_png
-    path "versions.yml"                    , emit: versions
+    path("*.png")                               , emit: counts_png
+    path "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -18,7 +18,7 @@ process COUNTS_PLOT {
     prefix   = task.ext.prefix ?: "${meta.id}"
 
     """
-    Rscript --vanilla parse_all_counts.R -f $counts_txt
+    parse_all_counts.R $counts_txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

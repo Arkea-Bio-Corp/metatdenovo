@@ -9,7 +9,7 @@ process CUSTOM_DUMPCOUNTS {
     tuple val(meta), val("null")
 
     output:
-    path "pipeline_counts.txt", emit: readcounts
+    tuple val(meta), path("pipeline_counts.txt"), emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when

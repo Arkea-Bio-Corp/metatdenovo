@@ -1,19 +1,9 @@
+#!/usr/bin/env Rscript
 suppressMessages(library(tidyverse))
-list.of.packages <- c("yaml", "optparse")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
 library(yaml)
-library(optparse)
 
-option_list = list(
-  make_option(c("-f", "--file"), type="character", default=NULL,
-              help="dataset file name", metavar="character")
-);
-
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
-counts_yaml <- read_yaml(opt$file[1])
-
+args <- commandArgs(trailingOnly = TRUE)
+counts_yaml <- read_yaml(args[1])
 
 order_pipeline <- c("TRIMMOMATIC", "BOWTIE2_ALIGN", "BBMAP_MERGE",
                     "SORTMERNA", "KRKN_NO_ARCH", "CAT_FASTQ",
@@ -46,5 +36,5 @@ ggplot(res, aes(x=tool, y=counts, fill = effect)) +
         legend.box.background = element_rect(colour = "black"),
         legend.position = "top")
 
-ggsave(filename = "All_counts_plot.png", device = "png",
+ggsave(filename = "All_counts_plot_mqc.png", device = "png",
        width = 8, height = 4, units = "in", bg = "#FFFFFF")
