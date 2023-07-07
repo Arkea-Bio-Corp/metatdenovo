@@ -1,4 +1,7 @@
 suppressMessages(library(tidyverse))
+list.of.packages <- c("yaml", "optparse")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 library(yaml)
 library(optparse)
 
