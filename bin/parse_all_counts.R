@@ -24,7 +24,7 @@ sum_by_name <- function(count_name, yaml) {
 }
 
 res <- data.frame(tool   = order_pipeline,
-                  counts = c(counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:TRIMMOMATIC`,
+                  counts = c(sum_by_name("TRIMMOMATIC", counts_yaml),
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BOWTIE2_ALIGN`,
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_MERGE`,
                              sum_by_name("SORTMERNA", counts_yaml),
@@ -48,4 +48,3 @@ ggplot(res, aes(x=tool, y=counts, fill = effect)) +
 
 ggsave(filename = "All_counts_plot.png", device = "png",
        width = 8, height = 4, units = "in", bg = "#FFFFFF")
-
