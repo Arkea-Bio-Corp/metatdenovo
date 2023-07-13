@@ -19,7 +19,7 @@ res <- data.frame(tool   = order_pipeline,
                              sum_by_name("KRKN_NO_ARCH", counts_yaml),
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:CAT_FASTQ`,
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_MERGE`,
-                             counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_DEDUPE`,),
+                             counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_DEDUPE`),
                   effect = c("Trim", "Filter", "Filter", "Filter", "Combine", "Merge", 
                              "Filter"))
 res$tool <- factor(res$tool, levels=order_pipeline)
