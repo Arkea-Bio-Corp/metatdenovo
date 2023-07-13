@@ -5,9 +5,8 @@ library(yaml)
 args <- commandArgs(trailingOnly = TRUE)
 counts_yaml <- read_yaml(args[1])
 
-order_pipeline <- c("TRIMMOMATIC", "BOWTIE2_ALIGN", "BBMAP_MERGE",
-                    "SORTMERNA", "KRKN_NO_ARCH", "CAT_FASTQ",
-                    "BBMAP_DEDUPE")
+order_pipeline <- c("TRIMMOMATIC", "BOWTIE2_ALIGN", "SORTMERNA", "KRKN_NO_ARCH", 
+                    "CAT_FASTQ", "BBMAP_MERGE", "BBMAP_DEDUPE")
 
 sum_by_name <- function(count_name, yaml) {
   return(Reduce("+", yaml[grep(count_name, names(yaml))]))
@@ -15,13 +14,14 @@ sum_by_name <- function(count_name, yaml) {
 
 res <- data.frame(tool   = order_pipeline,
                   counts = c(sum_by_name("TRIMMOMATIC", counts_yaml),
-                             counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BOWTIE2_ALIGN`,
-                             counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_MERGE`,
+                             sum_by_name("BOWTIE", counts_yaml),
                              sum_by_name("SORTMERNA", counts_yaml),
                              sum_by_name("KRKN_NO_ARCH", counts_yaml),
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:CAT_FASTQ`,
+                             counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_MERGE`,
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_DEDUPE`),
-                  effect = c("Trim", "Filter", "Merge", "Filter", "Filter", "Combine", "Filter"))
+                  effect = c("Trim", "Filter", "Filter", "Filter", "Combine", "Merge", 
+                             "Filter"))
 res$tool <- factor(res$tool, levels=order_pipeline)
 
 ggplot(res, aes(x=tool, y=counts, fill = effect)) +
