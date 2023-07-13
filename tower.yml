@@ -9,3 +9,6 @@ reports:
     display: SortMeRNA Combined Parallel Report
   "**/*fastqc.html":
     display: Early FastQC results
+  "**/Bowtie2_logs.txt":
+    display: Bowtie2 Combined Parallel Report
+    

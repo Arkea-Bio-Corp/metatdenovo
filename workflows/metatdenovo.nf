@@ -261,8 +261,8 @@ workflow METATDENOVO {
     // 
     eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
     eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // 
     // Functional annotation with hmmscan
