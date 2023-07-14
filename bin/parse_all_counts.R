@@ -15,7 +15,7 @@ sum_by_name <- function(count_name, yaml) {
 res <- data.frame(tool   = order_pipeline,
                   counts = c(sum_by_name("TRIMMOMATIC", counts_yaml),
                              sum_by_name("BOWTIE", counts_yaml),
-                             sum_by_name("SORTMERNA", counts_yaml),
+                             sum_by_name("SORTMERNA", counts_yaml)/2,
                              sum_by_name("KRKN_NO_ARCH", counts_yaml),
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:CAT_FASTQ`,
                              counts_yaml$`NFCORE_METATDENOVO:METATDENOVO:BBMAP_MERGE`,
