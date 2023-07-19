@@ -30,7 +30,7 @@ WorkflowMain.initialise(workflow, params, log)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SUPERASSEMBLE } from './workflows/super_assemble'
+include { POST_ASSEMBLE_CLUSTER } from './workflows/super_assemble'
 
 //
 // WORKFLOW: Run main Arkea-Bio-Corp/metatdenovo analysis pipeline
@@ -54,3 +54,4 @@ workflow {
     THE END :^)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+ 

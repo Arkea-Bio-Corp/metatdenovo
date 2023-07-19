@@ -61,6 +61,7 @@ include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mappe
 // MODULE: Installed directly from nf-core/modules (mostly)
 //
 
+include { CAT_CAT                      } from '../modules/nf-core/cat/cat/'
 include { MULTIQC                      } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS  } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CDHIT_CDHIT                  } from '../modules/nf-core/cdhit/'
@@ -81,4 +82,27 @@ def multiqc_report = []
 
 workflow POST_ASSEMBLE_CLUSTER {
 
+    ch_versions = Channel.empty()
+    ch_read_counts = Channel.empty()
+
+    // Gather files
+    // Sample sheet csv should be organized like so:
+    // sample,assembly
+    // sample1,/path/to/assembly.fa.gz
+
+    Channel.fromPath(ch_input)
+        .splitCsv(header: ['sample', 'assembly'], skip: 1 )
+        .collect(row -> "${row.assembly}")
+        .map{ [[id: "sample", single_end: false], it] }
+        .set { assembly_list }
+    
+    // combine gzipped fasta assemblies with CAT 🐈
+    CAT_CAT(assembly_list)
+    ch_versions = ch_versions.mix(CAT_CAT.out.versions)
+
+    // cluster by sequence similarity
+    CDHIT_CDHIT(CAT_CAT.out.file_out)
+    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions) 
+
+    
 }
