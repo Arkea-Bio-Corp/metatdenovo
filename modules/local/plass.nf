@@ -1,8 +1,7 @@
 process PLASS {
     tag "$meta.id"
 
-    container "soedinglab/plass"
-    docker.runOptions = "--entrypoint /bin/bash"
+    container "quay.io/biocontainers/plass:4.687d7--pl5321h6a68c12_5"
 
     input:
     tuple val(meta), path(reads)
@@ -29,7 +28,7 @@ process PLASS {
     $reads_args \\
     ${prefix}_assembly.fa.gz \\
     tmp \\
-    --split-memory-limit ${task.memory.giga}G
+    --split-memory-limit ${task.memory.giga}G \\
     --threads $task.cpus \\
     --compress 1 \\
     $args
