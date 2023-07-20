@@ -1,5 +1,4 @@
 process CUSTOM_DUMPSOFTWAREVERSIONS {
-    label 'process_single'
 
     // Requires `pyyaml` which does not have a dedicated container but is in the MultiQC container
     conda "bioconda::multiqc=1.14"
@@ -9,6 +8,7 @@ process CUSTOM_DUMPSOFTWAREVERSIONS {
 
     input:
     path versions
+    tuple val(meta), val("null")
 
     output:
     path "software_versions.yml"    , emit: yml

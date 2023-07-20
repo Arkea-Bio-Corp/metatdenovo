@@ -1,6 +1,5 @@
 process TRINITY {
     tag "$meta.id"
-    label 'process_high'
 
     conda "bioconda::trinity=2.15.1"
     container "quay.io/biocontainers/trinity:2.15.1--h6ab5fc9_2"
@@ -41,8 +40,7 @@ process TRINITY {
     ${reads_args} \\
     --output ${prefix}_trinity \\
     --CPU $task.cpus \\
-    $args \\
-    &> ${prefix}.trinity.log
+    $args 
 
     gzip -cf ${prefix}_trinity.Trinity.fasta > ${prefix}.fa.gz
 

@@ -1,4 +1,4 @@
-process BBMAP_DEDUPE {
+process BBMAP_MERGE {
     tag "$meta.id"
 
     conda "bioconda::bbmap=39.01"
@@ -10,12 +10,12 @@ process BBMAP_DEDUPE {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path('*.fastq.gz'), emit: reads
-    tuple val(meta), path('*.log')     , emit: log
-    tuple val(meta), val("null")       , emit: meta // passing meta tag only to others
-    path "versions.yml"                , emit: versions
-    path "counts.txt"                  , emit: readcounts
-
+    tuple val(meta), path('*.merged.fq.gz')   , emit: merged
+    tuple val(meta), path('*.unmerged.fq.gz') , emit: unmerged
+    tuple val(meta), path('*.log')            , emit: log
+    tuple val(meta), path('*.ihist.txt')      , emit: ihist
+    path "versions.yml"                       , emit: versions
+    path "counts.txt"                         , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,24 +23,27 @@ process BBMAP_DEDUPE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def all_reads      = meta.single_end ? "in=${reads[0]}" : "in1=${reads[0]} in2=${reads[1]}"
-    def deduped_reads  = meta.single_end ? "out=${prefix}.fastq.gz" : "out=${prefix}_deduped.fastq.gz"
+    def all_reads = meta.single_end ? 
+        "in=${reads[0]}" : 
+        "in1=${reads[0]} in2=${reads[1]}"
     """
     echo $meta > meta.log
-    dedupe.sh \\
+    bbmerge.sh \\
         -Xmx${task.memory.toGiga()}g \\
         $all_reads \\
-        $deduped_reads \\
+        out=${prefix}.merged.fq.gz \\
+        outu=${prefix}.unmerged.fq.gz \\
         threads=$task.cpus \\
+        ihist=${prefix}.ihist.txt \\
         $args \\
-        &> ${prefix}.dedupe.log
+        &> ${prefix}.merge.log
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bbmap: \$(bbversion.sh | grep -v "Duplicate cpuset")
     END_VERSIONS
     cat <<-END_COUNTS > counts.txt
     "${task.process}":
-        \$(zcat ${prefix}.fastq.gz | grep -c "@" )
+        \$(zcat ${prefix}.merged.fq.gz | grep -c "@" )
     END_COUNTS
     """
 }

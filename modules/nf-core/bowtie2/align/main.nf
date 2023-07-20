@@ -1,6 +1,5 @@
 process BOWTIE2_ALIGN {
     tag "$meta.id"
-    label "process_medium"
 
     conda "bioconda::bowtie2=2.4.4 bioconda::samtools=1.16.1 conda-forge::pigz=2.6"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -9,7 +8,7 @@ process BOWTIE2_ALIGN {
 
     input:
     tuple val(meta) , path(reads)
-    tuple val(meta2), path(index)
+    path  index
     val   save_unaligned
     val   sort_bam
 
@@ -17,7 +16,10 @@ process BOWTIE2_ALIGN {
     tuple val(meta), path("*.bam")    , emit: bam
     tuple val(meta), path("*.log")    , emit: log
     tuple val(meta), path("*fastq.gz"), emit: fastq, optional:false
-    path  "versions.yml"              , emit: versions
+    path "versions.yml"               , emit: versions
+    path "counts.txt"                 , emit: readcounts
+    tuple val(meta), val("null")      , emit: meta // passing meta tag only 
+    path('*.log')                     , emit: collect_log 
 
     when:
     task.ext.when == null || task.ext.when
@@ -30,7 +32,7 @@ process BOWTIE2_ALIGN {
     def unaligned = ""
     def reads_args = ""
     if (meta.single_end) {
-        unaligned = save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ""
+        unaligned = save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ""
         reads_args = "-U ${reads}"
     } else {
         unaligned = save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ""
@@ -67,5 +69,9 @@ process BOWTIE2_ALIGN {
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
+    cat <<-END_COUNTS > counts.txt
+    "${task.process}_${task.index}":
+        \$(zcat ${prefix}.unmapped_*.fastq.gz | grep -c "@" | awk '{print \$1/2}')
+    END_COUNTS
     """
 }

@@ -13,6 +13,7 @@ process CAT_FASTQ {
     output:
     tuple val(meta), path("*.merged.fastq.gz"), emit: reads
     path "versions.yml"                       , emit: versions
+    path "counts.txt"                         , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -30,6 +31,10 @@ process CAT_FASTQ {
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
             END_VERSIONS
+            cat <<-END_COUNTS > counts.txt
+            "${task.process}":
+                \$(zcat *.merged.fastq.gz | grep -c "@" )
+            END_COUNTS
             """
         }
     } else {
@@ -45,34 +50,10 @@ process CAT_FASTQ {
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
             END_VERSIONS
-            """
-        }
-    }
-
-    stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def readList = reads instanceof List ? reads.collect{ it.toString() } : [reads.toString()]
-    if (meta.single_end) {
-        if (readList.size > 1) {
-            """
-            touch ${prefix}.merged.fastq.gz
-
-            cat <<-END_VERSIONS > versions.yml
+            cat <<-END_COUNTS > counts.txt
             "${task.process}":
-                cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
-            END_VERSIONS
-            """
-        }
-    } else {
-        if (readList.size > 2) {
-            """
-            touch ${prefix}_1.merged.fastq.gz
-            touch ${prefix}_2.merged.fastq.gz
-
-            cat <<-END_VERSIONS > versions.yml
-            "${task.process}":
-                cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
-            END_VERSIONS
+                \$(zcat *.merged.fastq.gz | grep -c "@" )
+            END_COUNTS
             """
         }
     }

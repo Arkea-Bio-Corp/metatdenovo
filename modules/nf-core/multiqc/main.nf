@@ -1,5 +1,4 @@
 process MULTIQC {
-    label 'process_single'
 
     conda "bioconda::multiqc=1.14"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -7,10 +6,11 @@ process MULTIQC {
         'quay.io/biocontainers/multiqc:1.14--pyhdfd78af_0' }"
 
     input:
-    path  multiqc_files, stageAs: "?/*"
+    path multiqc_files, stageAs: "?/*"
     path(multiqc_config)
     path(extra_multiqc_config)
     path(multiqc_logo)
+    tuple val(meta), val("null")
 
     output:
     path "*multiqc_report.html", emit: report

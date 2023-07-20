@@ -1,6 +1,5 @@
 process BBMAP_REFORMAT {
     tag "$meta.id"
-    label 'process_medium'
 
     conda "bioconda::bbmap=39.01"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -21,13 +20,17 @@ process BBMAP_REFORMAT {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def all_reads       = meta.single_end ? "in=${reads}" : "in1=${reads[0]} in2=${reads[1]}"
-    def repaired_reads  = meta.single_end ? "out=${prefix}_rep.fastq.gz" : "out1=${prefix}_1_rep.fastq.gz out2=${prefix}_2_rep.fastq.gz"
+    def all_reads       = meta.single_end ? 
+        "in=${reads}" : 
+        "in1=${reads[0]} in2=${reads[1]}"
+    def repaired_reads  = meta.single_end ? 
+        "out=${prefix}_reformat.fastq.gz" : 
+        "out1=${prefix}_1_reformat.fastq.gz out2=${prefix}_2_reformat.fastq.gz"
     """
     reformat.sh \\
         -Xmx${task.memory.toGiga()}g \\
-        in=${reads} \\
-        out1=${prefix}_1_reformat.fastq.gz out2=${prefix}_2_reformat.fastq.gz \\
+        $all_reads \\
+        $repaired_reads \\
         $args \\
         &> ${prefix}.repair.log
 

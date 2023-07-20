@@ -1,6 +1,5 @@
 process TRIMGALORE {
     tag "$meta.id"
-    label 'process_medium'
 
     conda "bioconda::trim-galore=0.6.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -48,6 +47,9 @@ process TRIMGALORE {
         --gzip \\
         ${prefix}_1.fastq${gzswitch} \\
         ${prefix}_2.fastq${gzswitch}
+
+    mv ${prefix}_1_val_1.fq.gz ${prefix}_1_trimmed.fq.gz
+    mv ${prefix}_2_val_2.fq.gz ${prefix}_2_trimmed.fq.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
