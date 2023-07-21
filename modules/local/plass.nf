@@ -30,7 +30,7 @@ process PLASS {
     tmp \\
     --split-memory-limit ${task.memory.giga}G \\
     --threads $task.cpus \\
-    --compress 1 \\
+    --compressed 1 \\
     $args
 
     cat <<-END_VERSIONS > versions.yml
