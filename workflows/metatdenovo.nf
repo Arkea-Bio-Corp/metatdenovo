@@ -93,9 +93,11 @@ include { TRIMMOMATIC                       } from '../modules/nf-core/trimmomat
 include { TRINITY                           } from '../modules/nf-core/trinity/'
 
 // testing
-include { MEGAHIT   } from '../modules/nf-core/megahit/'
-include { PLASS     } from '../modules/local/plass'
-include { RNASPADES } from '../modules/nf-core/spades/'
+include { MEGAHIT                        } from '../modules/nf-core/megahit/'
+include { PLASS                          } from '../modules/local/plass'
+include { RNASPADES                      } from '../modules/nf-core/spades/'
+include { TRANS_ABYSS                    } from '../modules/local/transabyss'
+include { SOAP_DENOVO_TRANS              } from '../modules/local/soap-denovo-trans'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,6 +256,8 @@ workflow METATDENOVO {
 
 
     // trans abyss
+    TRANS_ABYSS(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
