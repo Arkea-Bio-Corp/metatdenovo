@@ -98,6 +98,9 @@ include { PLASS                          } from '../modules/local/plass'
 include { RNASPADES                      } from '../modules/nf-core/spades/'
 include { TRANS_ABYSS                    } from '../modules/local/transabyss'
 include { SOAP_DENOVO_TRANS              } from '../modules/local/soap-denovo-trans'
+// testing subworkflows
+include { BT2_ALIGN_STATS } from '../subworkflows/local/bt2_assembly_stats'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -239,6 +242,7 @@ workflow METATDENOVO {
     // Trinity
     TRINITY(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
+    BT2_ALIGN_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads)
 
     // PLASS
     PLASS(BBMAP_DEDUPE.out.reads)
