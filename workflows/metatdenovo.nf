@@ -242,7 +242,8 @@ workflow METATDENOVO {
     // Trinity
     TRINITY(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
-    BT2_ALIGN_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads)
+    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
     // PLASS
     PLASS(BBMAP_DEDUPE.out.reads)
