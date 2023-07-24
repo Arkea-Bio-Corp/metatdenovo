@@ -35,8 +35,8 @@ jobs:
     - name: Build, tag, and push docker image to Amazon ECR Public
       env:
         REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-        REGISTRY_ALIAS: 328636143206
-        REPOSITORY: config_counter
+        REGISTRY_ALIAS: r8r1f0u4
+        REPOSITORY: contig_counter
         IMAGE_TAG: latest
         REPO_IMAGE_PATH: containers/contig_counts
       run: |
