@@ -24,3 +24,4 @@ ggsave(sprintf("%s_contig_dist.png", args[2]),
        width = 8,
        height = 4,
        bg = "#FFFFFF")
+pdf(NULL)

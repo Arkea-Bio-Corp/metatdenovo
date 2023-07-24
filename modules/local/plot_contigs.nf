@@ -1,7 +1,7 @@
 process PLOT_CONTIGS {
     tag "$meta.id"
 
-    container "rocker/verse"
+    container "public.ecr.aws/r8r1f0u4/contig_counter:latest"
 
     input:
     tuple val(meta), path(assembly)
