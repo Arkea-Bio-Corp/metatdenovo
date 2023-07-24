@@ -33,7 +33,7 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: r8r1f0u4/contig_counter
+        ECR_REPOSITORY: contig_counter
         IMAGE_TAG: latest
         REPO_IMAGE_PATH: containers/contig_counts
       run: |
