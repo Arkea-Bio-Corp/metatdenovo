@@ -7,9 +7,8 @@ process SOAP_DENOVO_TRANS {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path('*.transcripts.fa.gz')  , optional:true, emit: transcripts
-    tuple val(meta), path('*.assembly.gfa.gz')    , optional:true, emit: gfa
-    tuple val(meta), path('*.log')                , emit: log
+    tuple val(meta), path('*.contig')             , emit: contigs
+    tuple val(meta), path('*.scafStatistics')     , emit: stats
     path  "versions.yml"                          , emit: versions
 
     when:
@@ -19,14 +18,36 @@ process SOAP_DENOVO_TRANS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def maxmem = task.memory.toGiga()
-    def illumina_reads = reads ? ( meta.single_end ? "-s $reads" : "-1 ${reads[0]} -2 ${reads[1]}" ) : ""
 
     """
-    
+    gzip -d -c $reads > ${prefix}_unzip.fq
+    cat <<-ENDCONF > config.txt
+    #maximal read length
+    max_rd_len=500
+    [LIB]
+    #maximal read length in this lib
+    rd_len_cutof=500
+    #average insert size
+    avg_ins=150
+    #if sequence needs to be reversed
+    reverse_seq=0
+    #in which part(s) the reads are used
+    asm_flags=1
+    map_len=32
+    #fastq file for single reads
+    q=${prefix}_unzip.fq
+    ENDCONF
+
+    SOAPdenovo-Trans-31mer all \\
+    -s config.txt \\
+    -o $prefix \\
+    -R \\
+    -p $task.cpus \\
+    $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        spades: \$(rnaspades.py --version 2>&1 | sed 's/^.*SPAdes genome assembler v//; s/ .*\$//')
+        SOAPdenovo-Trans: \$(SOAPdenovo-Trans-31mer 2>&1 | head -2 | tail -1 | sed 's/^The version //;s/: released .*//')
     END_VERSIONS
     """
 }

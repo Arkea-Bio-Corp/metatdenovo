@@ -5,6 +5,7 @@ process PLOT_CONTIGS {
 
     input:
     tuple val(meta), path(assembly)
+    val assembly_name
 
     output:
     path("*.png")                , emit: contig_histo
@@ -18,7 +19,7 @@ process PLOT_CONTIGS {
     prefix   = task.ext.prefix ?: "${meta.id}"
 
     """
-    contig_counts.R $counts_txt
+    contig_counts.R $assembly $assembly_name
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

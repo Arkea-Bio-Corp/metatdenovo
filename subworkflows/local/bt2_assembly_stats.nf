@@ -10,6 +10,7 @@ workflow ASSEMBLE_STATS {
     take:
         assembly
         input_reads
+        assembly_name
     main:
         ch_versions = Channel.empty()
 
@@ -21,7 +22,7 @@ workflow ASSEMBLE_STATS {
         BT2_TRNS_ALGN(input_reads, index_path, true, false)
 
         // Plot contig distribution
-        PLOT_CONTIGS(assembly)
+        PLOT_CONTIGS(assembly, assembly_name)
 
         ch_versions = ch_versions.mix(BT2_TRNS_ALGN.out.versions)
         ch_versions = ch_versions.mix(BT2_TRNS_BLD.out.versions)

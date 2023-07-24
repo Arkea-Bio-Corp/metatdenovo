@@ -99,7 +99,7 @@ include { RNASPADES                      } from '../modules/nf-core/spades/'
 include { TRANS_ABYSS                    } from '../modules/local/transabyss'
 include { SOAP_DENOVO_TRANS              } from '../modules/local/soap-denovo-trans'
 // testing subworkflows
-include { BT2_ALIGN_STATS } from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS }  from '../subworkflows/local/bt2_assembly_stats'
 
 
 /*
@@ -242,7 +242,7 @@ workflow METATDENOVO {
     // Trinity
     TRINITY(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
-    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads)
+    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads, "Trinity")
     ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
     // PLASS
@@ -258,7 +258,8 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(RNASPADES.out.versions)
 
     // soap denovo trans
-
+    SOAP_DENOVO_TRANS(BBMAP_DEDUPE.out.reads)
+    ch_versions = ch_versions.mix(SOAP_DENOVO_TRANS.out.versions)
 
     // trans abyss
     TRANS_ABYSS(BBMAP_DEDUPE.out.reads)
