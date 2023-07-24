@@ -36,6 +36,5 @@ jobs:
         ECR_REPOSITORY: contig_counter
         IMAGE_TAG: latest
       run: |
-        echo $PWD
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f $ECR_REGISTRY/containers/contig_counts .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f containers/contig_counts .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
