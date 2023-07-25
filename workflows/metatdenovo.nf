@@ -242,8 +242,6 @@ workflow METATDENOVO {
     // Trinity
     TRINITY(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(TRINITY.out.versions)
-    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads, "Trinity")
-    ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
     // PLASS
     PLASS(BBMAP_DEDUPE.out.reads)
@@ -264,6 +262,10 @@ workflow METATDENOVO {
     // trans abyss
     TRANS_ABYSS(BBMAP_DEDUPE.out.reads)
     ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
+
+    // run qc on all outputs
+    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads, "Trinity")
+    ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
