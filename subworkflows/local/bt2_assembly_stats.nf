@@ -5,6 +5,7 @@
 include { BOWTIE2_ALIGN as BT2_TRNS_ALGN } from '../../modules/nf-core/bowtie2/align/'
 include { BOWTIE2_BUILD as BT2_TRNS_BLD  } from '../../modules/nf-core/bowtie2/build/'
 include { PLOT_CONTIGS                   } from '../../modules/local/plot_contigs'
+include { TRANSRATE                      } from '../../modules/local/transrate'
 
 workflow ASSEMBLE_STATS {
     take:
