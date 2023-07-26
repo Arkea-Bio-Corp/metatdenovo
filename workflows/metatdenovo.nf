@@ -264,7 +264,12 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
 
     // run qc on all outputs
-    ASSEMBLE_STATS(TRINITY.out.transcript_fasta, BBMAP_DEDUPE.out.reads, "Trinity")
+    TRINITY.out.transcript_fasta
+        .map { [[id: it[0].id, single_end: it[0].single_end, assembler: "Trinity"], it[1]] }
+        .view()
+        .set { trinity_test }
+    // [[id:SAMPLE1_PE, single_end:true, assembler:Trinity], /home/tfalk/metatdenovo/work/28/5de3a25565f11fec054cf3010b7086/SAMPLE1_PE.fa.gz]
+    ASSEMBLE_STATS(trinity_test, BBMAP_DEDUPE.out.reads, "Trinity")
     ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
 

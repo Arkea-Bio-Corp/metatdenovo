@@ -25,6 +25,9 @@ workflow ASSEMBLE_STATS {
         // Plot contig distribution
         PLOT_CONTIGS(assembly, assembly_name)
 
+        // quick NXX numbers from Transrate
+        TRANSRATE(assembly)
+
         ch_versions = ch_versions.mix(BT2_TRNS_ALGN.out.versions)
         ch_versions = ch_versions.mix(BT2_TRNS_BLD.out.versions)
 

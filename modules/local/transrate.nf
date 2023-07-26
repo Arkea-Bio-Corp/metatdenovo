@@ -5,7 +5,6 @@ process TRANSRATE {
 
     input:
     tuple val(meta), path(assembly)
-    val assembly_name
 
     output:
     path("*assemblies.csv")      , emit: assembly_qc
@@ -20,7 +19,7 @@ process TRANSRATE {
 
     """
     transrate \\
-      --threads $task.cpus
+      --threads $task.cpus \\
       --assembly $assembly \\
       --output ${prefix}_transrate \\
       $args
