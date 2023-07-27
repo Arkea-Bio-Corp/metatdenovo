@@ -9,6 +9,7 @@ process PLOT_CONTIGS {
 
     output:
     path("*.png")                , emit: contig_histo
+    path("*plot_data.rdata")     , emit: plot_data
     path "versions.yml"          , emit: versions
 
     when:

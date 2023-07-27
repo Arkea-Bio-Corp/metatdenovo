@@ -19,9 +19,12 @@ unlist(fasta) %>%
                linetype = "dashed",
                linewidth = 1) +
     theme_minimal() +
-    ggtitle(sprintf("%s Contig Distribution", args[2]))
+    ggtitle(sprintf("%s Contig Distribution", args[2])) -> plot_out
+
 ggsave(sprintf("%s_contig_dist.png", args[2]),
        width = 8,
        height = 4,
        bg = "#FFFFFF")
 pdf(NULL)
+
+save(plot_out, file = sprintf("%s_plot_data.rdata", args[2]))

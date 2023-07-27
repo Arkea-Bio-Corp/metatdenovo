@@ -19,8 +19,7 @@ process TRANSRATE {
     // tolerate both gzipped and normal inputs
     def gzipped = assembly.toString().endsWith(".gz") ? true : false
     """
-    echo $gzipped
-    if [[$gzipped]]; then
+    if $gzipped; then
       gzip -d -c $assembly > assembly_unzipped.fa
     else
       mv $assembly assembly_unzipped.fa
