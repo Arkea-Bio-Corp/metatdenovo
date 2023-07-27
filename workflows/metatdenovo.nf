@@ -99,7 +99,12 @@ include { RNASPADES                      } from '../modules/nf-core/spades/'
 include { TRANS_ABYSS                    } from '../modules/local/transabyss'
 include { SOAP_DENOVO_TRANS              } from '../modules/local/soap-denovo-trans'
 // testing subworkflows
-include { ASSEMBLE_STATS }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS         }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS as AS_I }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS as AS_II }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS as AS_III }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS as AS_IV }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS as AS_V }  from '../subworkflows/local/bt2_assembly_stats'
 
 
 /*
@@ -265,12 +270,50 @@ workflow METATDENOVO {
 
     // run qc on all outputs
     TRINITY.out.transcript_fasta
-        .map { [[id: it[0].id, single_end: it[0].single_end, assembler: "Trinity"], it[1]] }
-        .view()
-        .set { trinity_test }
+        .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "Trinity"], 
+                it[1]] }
+        .set { trinity_contigs }
+    PLASS.out.fasta
+            .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "PLASS"], 
+                it[1]] }
+        .set { plass_contigs }
+    MEGAHIT.out.contigs
+            .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "Megahit"], 
+                it[1]] }
+        .set { megahit_contigs }
+    RNASPADES.out.transcripts
+        .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "RNASpades"], 
+                it[1]] }
+        .set { rnaspades_contigs }
+    SOAP_DENOVO_TRANS.out.contigs
+        .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "SOAP_DeNovo_Trans"], 
+                it[1]] }
+        .set { soap_contigs }
+    TRANS_ABYSS.out.transcripts
+        .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: "Trans_Abyss"], 
+                it[1]] }
+        .set { trans_abyss_contigs }
+
     // [[id:SAMPLE1_PE, single_end:true, assembler:Trinity], /home/tfalk/metatdenovo/work/28/5de3a25565f11fec054cf3010b7086/SAMPLE1_PE.fa.gz]
-    ASSEMBLE_STATS(trinity_test, BBMAP_DEDUPE.out.reads, "Trinity")
-    ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
+    ASSEMBLE_STATS(trinity_contigs, BBMAP_DEDUPE.out.reads, "Trinity")
+    AS_I(plass_contigs, BBMAP_DEDUPE.out.reads, "PLASS")
+    AS_II(megahit_contigs, BBMAP_DEDUPE.out.reads, "Megahit")
+    AS_III(rnaspades_contigs, BBMAP_DEDUPE.out.reads, "RNASpades")
+    AS_IV(soap_contigs, BBMAP_DEDUPE.out.reads, "SOAP_DeNovo_Trans")
+    AS_V(trans_abyss_contigs, BBMAP_DEDUPE.out.reads, "Trans_Abyss")
+    // ch_versions = ch_versions.mix(ASSEMBLE_STATS.out.versions)
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

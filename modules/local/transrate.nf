@@ -16,11 +16,19 @@ process TRANSRATE {
     script:
     def args = task.ext.args   ?: ''
     prefix   = task.ext.prefix ?: "${meta.id}"
-
+    // tolerate both gzipped and normal inputs
+    def gzipped = assembly.toString().endsWith(".gz") ? true : false
     """
+    echo $gzipped
+    if [[$gzipped]]; then
+      gzip -d -c $assembly > assembly_unzipped.fa
+    else
+      mv $assembly assembly_unzipped.fa
+    fi
+
     transrate \\
       --threads $task.cpus \\
-      --assembly $assembly \\
+      --assembly assembly_unzipped.fa \\
       --output ${prefix}_transrate \\
       $args
 
