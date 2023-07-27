@@ -20,6 +20,12 @@ workflow ASSEMBLE_STATS {
         BT2_TRNS_BLD.out.index
             .map { it[1] }
             .set { index_path }
+        input_reads
+            .map { [[id: it[0].id, 
+                 single_end: it[0].single_end, 
+                 assembler: assembly_name], 
+                it[1]] }
+            .set { input_reads }
         BT2_TRNS_ALGN(input_reads, index_path, true, false)
 
         // Plot contig distribution
@@ -32,7 +38,7 @@ workflow ASSEMBLE_STATS {
         ch_versions = ch_versions.mix(BT2_TRNS_BLD.out.versions)
 
     emit:
-        aligned         = BT2_TRNS_ALGN.out.collect_log
+        // aligned         = BT2_TRNS_ALGN.out.collect_log
         versions        = ch_versions
 
 }

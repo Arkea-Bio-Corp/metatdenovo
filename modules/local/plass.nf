@@ -7,7 +7,7 @@ process PLASS {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*.fa.gz")       , emit: fasta
+    tuple val(meta), path("*.fa")       , emit: fasta
     path "versions.yml"                    , emit: versions
 
     when:
@@ -26,11 +26,11 @@ process PLASS {
     """
     plass assemble \\
     $reads_args \\
-    ${prefix}_assembly.fa.gz \\
+    ${prefix}_assembly.fa \\
     tmp \\
     --split-memory-limit ${task.memory.giga}G \\
     --threads $task.cpus \\
-    --compressed 1 \\
+    --compressed 0 \\
     $args
 
     cat <<-END_VERSIONS > versions.yml
