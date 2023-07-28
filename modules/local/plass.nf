@@ -24,11 +24,10 @@ process PLASS {
     }
 
     """
-    plass assemble \\
+    plass nuclassemble \\
     $reads_args \\
     ${prefix}_assembly.fa \\
     tmp \\
-    --split-memory-limit ${task.memory.giga}G \\
     --threads $task.cpus \\
     --compressed 0 \\
     $args
