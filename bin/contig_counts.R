@@ -8,8 +8,9 @@ fasta <- read.fasta(args[1], as.string = T, seqonly = T)
 
 unlist(fasta) %>%
   nchar() %>%
-  as_tibble() %>%
-  ggplot(aes(x=value)) +
+  as_tibble() -> fasta_frame
+
+ggplot(fasta_frame, aes(x=value)) +
     geom_histogram(color = "#00abff",
                    binwidth = 10,
                    fill = "#dbdbdb",
@@ -27,4 +28,4 @@ ggsave(sprintf("%s_contig_dist.png", args[2]),
        bg = "#FFFFFF")
 pdf(NULL)
 
-save(plot_out, file = sprintf("%s_plot_data.rdata", args[2]))
+save(fasta_frame, file = sprintf("%s_plot_data.rdata", args[2]))
