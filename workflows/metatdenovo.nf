@@ -256,8 +256,14 @@ workflow METATDENOVO {
 
     //
     // Run a quick QC check
-    //
-
+    // & change meta tag to improve output directory labeling
+    assembled_contigs
+        .map { [[id: it[0].id, 
+                single_end: it[0].single_end, 
+                assembler: params.assembler], 
+            it[1]] }
+        .set { qc_contigs }
+    ASSEMBLE_STATS(qc_contigs, BBMAP_DEDUPE.out.reads, params.assembler)
 
     // 
     // Clustering with CD-HIT-EST to remove redundancies
