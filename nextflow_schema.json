@@ -188,8 +188,32 @@
         "assembly_options": {
             "title": "de novo assembly",
             "type": "object",
-            "description": "Options that are specific to Trinity for assembly of RNA-Seq data",
+            "description": "Options that are specific to the assembler of choice. Not all options are avilable to all assemblers.",
             "properties": {
+                "assembler": {
+                    "type": "string",
+                    "default": "Megahit",
+                    "enum": [
+                        "Megahit",
+                        "Trans-Abyss",
+                        "SOAP-DeNovo-Trans",
+                        "Trinity"
+                    ],
+                    "description": "Choose which assembler tool to use. Run times and results may vary drastically between assemblers.",
+                    "fa_icon": "fas fa-bars-staggered"
+                },
+                "soapdn_len": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "Length of the minimum contig to be used in the Soap-DeNovo-Trans assembler.",
+                    "help_text": "Does NOT work for other assemblers."
+                },
+                "tabyss_len": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "Length of the minimum contig to be used in the Trans-Abyss assembler.",
+                    "help_text": "Does NOT work for other assemblers."
+                },
                 "normalize_assembly": {
                     "type": "boolean",
                     "default": true,

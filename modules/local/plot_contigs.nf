@@ -5,7 +5,7 @@ process PLOT_CONTIGS {
 
     input:
     tuple val(meta), path(assembly)
-    val assembly_name
+    val(assembly_name)
 
     output:
     path("*.png")                , emit: contig_histo
