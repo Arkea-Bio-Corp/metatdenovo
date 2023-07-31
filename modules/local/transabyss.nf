@@ -18,7 +18,7 @@ process TRANS_ABYSS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     transabyss \\
-    --se SAMPLE1_PE.fastq.gz \\
+    --se $reads \\
     --outdir ./ \\
     --threads $task.cpus \\
     --name $prefix \\
