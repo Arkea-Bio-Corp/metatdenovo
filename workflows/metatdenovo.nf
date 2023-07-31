@@ -229,10 +229,26 @@ workflow METATDENOVO {
                                                  BBMAP_DEDUPE.out.meta)
 
     // 
-    // Merge reads, normalize, and assemble with Trinity
+    // Run your assembler of choice
     // 
-    TRINITY(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(TRINITY.out.versions)
+    if (params.assembler == "Megahit") {
+        MEGAHIT(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(MEGAHIT.out.versions)`
+    } else if (params.assembler == "Trans-Abyss") {
+        TRANS_ABYSS(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
+    } else if (params.assembler == "SOAP-DeNovo-Trans") {
+        SOAP_DENOVO_TRANS(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(SOAP_DENOVO_TRANS.out.versions)
+    } else { // Trinity case
+        TRINITY(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(TRINITY.out.versions)
+    }
+
+    //
+    // Run a quick QC check
+    //
+
 
     // 
     // Clustering with CD-HIT-EST to remove redundancies
