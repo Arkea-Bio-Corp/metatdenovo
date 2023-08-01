@@ -171,7 +171,7 @@
                     "description": "Directory for Kraken2 database of ONLY archaeal organisms.",
                     "pattern": "^\\S+",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/archaea_db/",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/archdb_rugs_kl25s4/",
                     "fa_icon": "fas fa-viruses"
                 },
                 "no_archaea_db": {
