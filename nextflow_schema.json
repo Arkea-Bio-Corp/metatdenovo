@@ -162,7 +162,7 @@
                 },
                 "confidence": {
                     "type": "number",
-                    "default": 0,
+                    "default": 0.05,
                     "description": "A scoring value between 0 and 1 that acts as a threshold for labeling an individual sequence a specific taxonomy ID. The classifier will adjust the label up the taxonomic tree until the label meets or exceeds the set threshold.",
                     "fa_icon": "fas fa-crosshairs"
                 },
