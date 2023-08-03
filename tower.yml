@@ -13,5 +13,3 @@ reports:
     display: Bowtie2 Combined Parallel Report
   "**/*contig_dist.png":
     display: Assembler Contig Distribution Plot
-  "**/*bowtie2.log":
-    display: Bowtie2 Assembler to Reads Percentage
