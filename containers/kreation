@@ -5,7 +5,7 @@ ENV PATH=/opt/conda/bin:$PATH
 
 RUN set -ex && \
     conda install python=2.7 && \
-    conda install -c conda-forge python-igraph && \
+    conda install python-igraph && \
     conda config --set always_yes yes --set changeps1 no && \
     conda info -a && \
     conda config --add channels bioconda && \
