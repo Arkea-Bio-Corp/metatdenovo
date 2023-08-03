@@ -1,0 +1,12 @@
+FROM ubuntu:22.04
+COPY --from=continuumio/miniconda3:3.14.1 /opt/conda /opt/conda
+
+ENV PATH=/opt/conda/bin:$PATH
+
+RUN set -ex && \
+    conda install python=2.7 && \
+    conda install -c conda-forge python-igraph && \
+    conda config --set always_yes yes --set changeps1 no && \
+    conda info -a && \
+    conda config --add channels bioconda && \
+    conda install -c bioconda transabyss
