@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.6
+  - python=2.7.18
   - python-igraph=0.7
   - transabyss
+  - cd-hit

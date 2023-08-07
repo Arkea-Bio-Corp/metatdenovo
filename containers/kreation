@@ -1,12 +1,15 @@
-FROM ubuntu:22.04
-COPY --from=continuumio/miniconda3:latest /opt/conda /opt/conda
+FROM continuumio/miniconda3
 
-ENV PATH=/opt/conda/bin:$PATH
+WORKDIR /kreation
+RUN apt-get update -y && \
+    apt-get install -y git
+RUN git clone https://github.com/SchulzLab/KREATION
 
-RUN set -ex && \
-    conda install python=3.6 && \
-    conda install -c conda-forge python-igraph && \
-    conda config --set always_yes yes --set changeps1 no && \
-    conda info -a && \
-    conda config --add channels bioconda && \
-    conda install -c bioconda abyss
+WORKDIR /trans_abyss
+
+COPY kreation_env.yml .
+RUN conda env create -f kreation_env.yml
+
+SHELL ["conda", "run", "-n", "kreation", "/bin/bash", "-c"]
+
+RUN conda install -c bioconda transabyss
