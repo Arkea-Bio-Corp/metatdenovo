@@ -87,14 +87,23 @@ workflow POST_ASSEMBLE_CLUSTER {
 
     // Gather files
     // Sample sheet csv should be organized like so:
-    // sample,assembly
-    // sample1,/path/to/assembly.fa.gz
+    // sample,assembly,reads
+    // sample1,/path/to/assembly.fa.gz,/path/to/reads.fq.gz
 
     Channel.fromPath(ch_input)
-        .splitCsv(header: ['sample', 'assembly'], skip: 1 )
+        .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.assembly}")
-        .map{ [[id: "sample", single_end: false], it] }
+        .map{ [[id: "sample", single_end: true], it] }
         .set { assembly_list }
+
+    Channel.fromPath(ch_input)
+        .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
+        .collect(row -> "${row.reads}")
+        .map{ [[id: "sample", single_end: true], it] }
+        .set { reads_list }
+
+    // combine gzipped fastq reads with CAT 🐈‍⬛
+    Cat fastq?
     
     // combine gzipped fasta assemblies with CAT 🐈
     CAT_CAT(assembly_list)
@@ -111,10 +120,10 @@ workflow POST_ASSEMBLE_CLUSTER {
     ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
     // Quantification w/ salmon
-    // salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
-    // ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    // SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
-    // ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
+    salmon_ind = SALMON_INDEX(CAT_CAT.out.file_out).index
+    ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
+    SALMON_QUANT(???, salmon_ind)   
+    ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Functional annotation with eggnog-mapper
     eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
