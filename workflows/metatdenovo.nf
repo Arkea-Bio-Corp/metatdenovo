@@ -71,12 +71,12 @@ include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
 include { MULTIQC                           } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
-include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
+include { CUSTOM_DUMPCOUNTS               } from '../modules/nf-core/custom/dumpcounts/'
 include { CUSTOM_DUMPLOGS as TRM_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { CUSTOM_DUMPLOGS as SMR_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { CUSTOM_DUMPLOGS as KR2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
 include { CUSTOM_DUMPLOGS as BT2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
-include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
+include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/main'
 include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
 include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
@@ -245,8 +245,8 @@ workflow METATDENOVO {
     // 
     // Run a bunch of assemblers
     // Trinity
-    TRINITY(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(TRINITY.out.versions)
+    // TRINITY(BBMAP_DEDUPE.out.reads)
+    // ch_versions = ch_versions.mix(TRINITY.out.versions)
 
     // PLASS
     PLASS(BBMAP_DEDUPE.out.reads)
@@ -269,12 +269,12 @@ workflow METATDENOVO {
     ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
 
     // run qc on all outputs
-    TRINITY.out.transcript_fasta
-        .map { [[id: it[0].id, 
-                 single_end: it[0].single_end, 
-                 assembler: "Trinity"], 
-                it[1]] }
-        .set { trinity_contigs }
+    // TRINITY.out.transcript_fasta
+    //     .map { [[id: it[0].id, 
+    //              single_end: it[0].single_end, 
+    //              assembler: "Trinity"], 
+    //             it[1]] }
+    //     .set { trinity_contigs }
     PLASS.out.fasta
             .map { [[id: it[0].id, 
                  single_end: it[0].single_end, 
@@ -307,7 +307,7 @@ workflow METATDENOVO {
         .set { trans_abyss_contigs }
 
     // [[id:SAMPLE1_PE, single_end:true, assembler:Trinity], /home/tfalk/metatdenovo/work/28/5de3a25565f11fec054cf3010b7086/SAMPLE1_PE.fa.gz]
-    ASSEMBLE_STATS(trinity_contigs, BBMAP_DEDUPE.out.reads, "Trinity")
+    // ASSEMBLE_STATS(trinity_contigs, BBMAP_DEDUPE.out.reads, "Trinity")
     AS_I(plass_contigs, BBMAP_DEDUPE.out.reads, "PLASS")
     AS_II(megahit_contigs, BBMAP_DEDUPE.out.reads, "Megahit")
     AS_III(rnaspades_contigs, BBMAP_DEDUPE.out.reads, "RNASpades")
