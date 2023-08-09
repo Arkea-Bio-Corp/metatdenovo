@@ -62,6 +62,7 @@ include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mappe
 //
 
 include { CAT_CAT                      } from '../modules/nf-core/cat/cat/'
+include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
 include { MULTIQC                      } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS  } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CDHIT_CDHIT                  } from '../modules/nf-core/cdhit/'
@@ -94,16 +95,22 @@ workflow POST_ASSEMBLE_CLUSTER {
         .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.assembly}")
         .map{ [[id: "sample", single_end: true], it] }
+        .view()
         .set { assembly_list }
 
     Channel.fromPath(ch_input)
         .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.reads}")
         .map{ [[id: "sample", single_end: true], it] }
+        .view()
         .set { reads_list }
 
     // combine gzipped fastq reads with CAT 🐈‍⬛
-    Cat fastq?
+    reads_list
+        .groupTuple()
+        .map { [it[0], it[1].flatten()] }
+        .set { collectedFastqs }
+    CAT_FASTQ(collectedFastqs)
     
     // combine gzipped fasta assemblies with CAT 🐈
     CAT_CAT(assembly_list)
@@ -122,7 +129,7 @@ workflow POST_ASSEMBLE_CLUSTER {
     // Quantification w/ salmon
     salmon_ind = SALMON_INDEX(CAT_CAT.out.file_out).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(???, salmon_ind)   
+    SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     // Functional annotation with eggnog-mapper
