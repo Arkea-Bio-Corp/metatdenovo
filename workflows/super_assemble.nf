@@ -95,14 +95,12 @@ workflow POST_ASSEMBLE_CLUSTER {
         .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.assembly}")
         .map{ [[id: "sample", single_end: true], it] }
-        .view()
         .set { assembly_list }
 
     Channel.fromPath(ch_input)
         .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.reads}")
         .map{ [[id: "sample", single_end: true], it] }
-        .view()
         .set { reads_list }
 
     // combine gzipped fastq reads with CAT 🐈‍⬛
