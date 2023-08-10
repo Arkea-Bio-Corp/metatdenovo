@@ -62,7 +62,8 @@ include { EGGNOG_MAPPER                    } from '../modules/local/eggnog/mappe
 //
 
 include { CAT_CAT                      } from '../modules/nf-core/cat/cat/'
-include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
+include { CAT_CAT as CAT_QUANT         } from '../modules/nf-core/cat/cat/'
+include { CAT_FASTQ 	          	   } from '../modules/nf-core/cat/fastq/'
 include { MULTIQC                      } from '../modules/nf-core/multiqc/'
 include { CUSTOM_DUMPSOFTWAREVERSIONS  } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CDHIT_CDHIT                  } from '../modules/nf-core/cdhit/'
