@@ -94,7 +94,7 @@ workflow POST_ASSEMBLE_CLUSTER {
     Channel.fromPath(ch_input)
         .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
         .collect(row -> "${row.assembly}")
-        .map { [[id: "sample", single_end: true], it] }
+        .map { [[id: "combined_assembly", single_end: true], it] }
         .set { assembly_list }
 
     Channel.fromPath(ch_input)
