@@ -267,6 +267,12 @@
             "description": "Functional annotation options for eggnog and hmmscan.",
             "type": "object",
             "properties": {
+                "run_post_assembly": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If disabled, skips the CD-HIT through Eggnog and hmmersearch steps. Useful if merely preparing for a later meta-assembly.",
+                    "fa-icon": "fas fa-ban"
+                },
                 "eggnogdir": {
                     "type": "string",
                     "description": "Directory with multiple eggnog indexes and databases.",
