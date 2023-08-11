@@ -10,7 +10,7 @@ process MEGAHIT {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("megahit_out/*.contigs.fa.gz")                            , emit: contigs
+    tuple val(meta), path("*.contigs.fa.gz")                , emit: contigs
     tuple val(meta), path("megahit_out/intermediate_contigs/k*.contigs.fa.gz")      , emit: k_contigs
     tuple val(meta), path("megahit_out/intermediate_contigs/k*.addi.fa.gz")         , emit: addi_contigs
     tuple val(meta), path("megahit_out/intermediate_contigs/k*.local.fa.gz")        , emit: local_contigs
@@ -39,6 +39,8 @@ process MEGAHIT {
             megahit_out/*.fa \\
             megahit_out/intermediate_contigs/*.fa
 
+        mv megahit_out/${prefix}.contigs.fa.gz . 
+
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             megahit: \$(echo \$(megahit -v 2>&1) | sed 's/MEGAHIT v//')
@@ -59,6 +61,8 @@ process MEGAHIT {
             $args2 \\
             megahit_out/*.fa \\
             megahit_out/intermediate_contigs/*.fa
+
+        mv megahit_out/${prefix}.contigs.fa.gz . 
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
