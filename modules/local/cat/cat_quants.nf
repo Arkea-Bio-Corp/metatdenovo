@@ -14,7 +14,7 @@ process CAT_QUANTS {
         quants.collect{ it.toString() } : 
         [quants.toString()]
     """
-    # head -1 $quants > combined_quants.sf
+    head -q -n 1 $quants | tail -1 > combined_quants.sf
     grep -vh "^Name" ${qlist.join(' ')} >> combined_quants.sf
     """
 }
