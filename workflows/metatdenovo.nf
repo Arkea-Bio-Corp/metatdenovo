@@ -66,32 +66,37 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules (mostly)
 //
 
-include { CAT_FASTQ 	          	        } from '../modules/nf-core/cat/fastq/'
-include { FASTQC as PRE_TRIM_FQC            } from '../modules/nf-core/fastqc/'
-include { FASTQC as POST_MERGE_FQC          } from '../modules/nf-core/fastqc/'
-include { MULTIQC                           } from '../modules/nf-core/multiqc/'
-include { CUSTOM_DUMPSOFTWAREVERSIONS       } from '../modules/nf-core/custom/dumpsoftwareversions/'
-include { CUSTOM_DUMPCOUNTS                 } from '../modules/nf-core/custom/dumpcounts/'
-include { CUSTOM_DUMPLOGS as TRM_LOGS       } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as SMR_LOGS       } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as KR2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as BT2_LOGS       } from '../modules/nf-core/custom/dumplogs/'
-include { BOWTIE2_ALIGN                     } from '../modules/nf-core/bowtie2/align/'
-include { BBMAP_DEDUPE                      } from '../modules/nf-core/bbmap/dedupe/'
-include { BBMAP_REPAIR                      } from '../modules/nf-core/bbmap/repair/'
-include { BBMAP_REFORMAT                    } from '../modules/nf-core/bbmap/reformat/'
-include { BBMAP_MERGE                       } from '../modules/nf-core/bbmap/merge/'
-include { CDHIT_CDHIT                       } from '../modules/nf-core/cdhit/'
-include { KRAKEN2_KRAKEN2 as KRKN_ARCH      } from '../modules/nf-core/kraken2/'
-include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH   } from '../modules/nf-core/kraken2/'
-include { SALMON_INDEX                      } from '../modules/nf-core/salmon/index/'
-include { SALMON_QUANT                      } from '../modules/nf-core/salmon/quant/'
-include { SORTMERNA                         } from '../modules/nf-core/sortmerna/'
-include { TRANSDECODER_LONGORF              } from '../modules/nf-core/transdecoder/longorf/'
-include { TRANSDECODER_PREDICT              } from '../modules/nf-core/transdecoder/predict/'
-include { TRIMGALORE                        } from '../modules/nf-core/trimgalore/'
-include { TRIMMOMATIC                       } from '../modules/nf-core/trimmomatic'
-include { TRINITY                           } from '../modules/nf-core/trinity/'
+include { CAT_FASTQ 	          	       } from '../modules/nf-core/cat/fastq/'
+include { FASTQC as PRE_TRIM_FQC           } from '../modules/nf-core/fastqc/'
+include { FASTQC as POST_MERGE_FQC         } from '../modules/nf-core/fastqc/'
+include { MULTIQC                          } from '../modules/nf-core/multiqc/'
+include { CUSTOM_DUMPSOFTWAREVERSIONS      } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { CUSTOM_DUMPCOUNTS                } from '../modules/nf-core/custom/dumpcounts/'
+include { CUSTOM_DUMPLOGS as TRM_LOGS      } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPLOGS as SMR_LOGS      } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPLOGS as KR2_LOGS      } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPLOGS as BT2_LOGS      } from '../modules/nf-core/custom/dumplogs/'
+include { BOWTIE2_ALIGN                    } from '../modules/nf-core/bowtie2/align/'
+include { BBMAP_DEDUPE                     } from '../modules/nf-core/bbmap/dedupe/'
+include { BBMAP_REPAIR                     } from '../modules/nf-core/bbmap/repair/'
+include { BBMAP_REFORMAT                   } from '../modules/nf-core/bbmap/reformat/'
+include { BBMAP_MERGE                      } from '../modules/nf-core/bbmap/merge/'
+include { CDHIT_CDHIT                      } from '../modules/nf-core/cdhit/'
+include { KRAKEN2_KRAKEN2 as KRKN_ARCH     } from '../modules/nf-core/kraken2/'
+include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH  } from '../modules/nf-core/kraken2/'
+include { SALMON_INDEX                     } from '../modules/nf-core/salmon/index/'
+include { SALMON_QUANT                     } from '../modules/nf-core/salmon/quant/'
+include { SORTMERNA                        } from '../modules/nf-core/sortmerna/'
+include { TRANSDECODER_LONGORF             } from '../modules/nf-core/transdecoder/longorf/'
+include { TRANSDECODER_PREDICT             } from '../modules/nf-core/transdecoder/predict/'
+include { TRIMGALORE                       } from '../modules/nf-core/trimgalore/'
+include { TRIMMOMATIC                      } from '../modules/nf-core/trimmomatic'
+include { TRINITY                          } from '../modules/nf-core/trinity/'
+include { SOAP_DENOVO_TRANS                } from '../modules/local/soap-denovo-trans'
+include { MEGAHIT                          } from '../modules/nf-core/megahit/'
+include { TRANS_ABYSS                      } from '../modules/local/transabyss'
+include { ASSEMBLE_STATS                   }  from '../subworkflows/local/bt2_assembly_stats'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -229,57 +234,87 @@ workflow METATDENOVO {
                                                  BBMAP_DEDUPE.out.meta)
 
     // 
-    // Merge reads, normalize, and assemble with Trinity
+    // Run your assembler of choice
     // 
-    TRINITY(BBMAP_DEDUPE.out.reads)
-    ch_versions = ch_versions.mix(TRINITY.out.versions)
+    if (params.assembler == "Megahit") {
+        MEGAHIT(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(MEGAHIT.out.versions)
+        assembled_contigs = MEGAHIT.out.contigs
+    } else if (params.assembler == "Trans-Abyss") {
+        TRANS_ABYSS(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(TRANS_ABYSS.out.versions)
+        assembled_contigs = TRANS_ABYSS.out.transcripts
+    } else if (params.assembler == "SOAP-DeNovo-Trans") {
+        SOAP_DENOVO_TRANS(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(SOAP_DENOVO_TRANS.out.versions)
+        assembled_contigs = SOAP_DENOVO_TRANS.out.contigs
+    } else { // Trinity case
+        TRINITY(BBMAP_DEDUPE.out.reads)
+        ch_versions = ch_versions.mix(TRINITY.out.versions)
+        assembled_contigs = TRINITY.out.transcript_fasta
+    }
 
-    // 
-    // Clustering with CD-HIT-EST to remove redundancies
-    // 
-    CDHIT_CDHIT(TRINITY.out.transcript_fasta)
-    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
-
-    // 
-    // ORF prediction and translation to peptide seqs with Transdecoder
-    // 
-    tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
-    ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
-    TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
-    ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
-
-    // 
-    // Quantification w/ salmon
     //
-    salmon_ind = SALMON_INDEX(TRINITY.out.transcript_fasta).index
-    ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
-    ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
+    // Run a quick QC check
+    // & change meta tag to improve output directory labeling
+    assembled_contigs
+        .map { [[id: it[0].id, 
+                single_end: it[0].single_end, 
+                assembler: params.assembler], 
+            it[1]] }
+        .set { qc_contigs }
+    ASSEMBLE_STATS(qc_contigs, BBMAP_DEDUPE.out.reads, params.assembler)
 
-    // 
-    // Functional annotation with eggnog-mapper
-    // 
-    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
-    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // Choose to run post assembly steps, can save a bit of time if you only need the 
+    // assemblies. Doesn't interact with any MultiQC inputs.
+    if (params.run_post_assembly) {
+        // 
+        // Clustering with CD-HIT-EST to remove redundancies
+        // 
+        CDHIT_CDHIT(assembled_contigs)
+        ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions)
 
-    // 
-    // Functional annotation with hmmscan
-    // 
-    hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    hmmerfile  = Channel.value(params.hmmerfile)
-    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
-    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+        // 
+        // ORF prediction and translation to peptide seqs with Transdecoder
+        // 
+        tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
+        ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
+        TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
+        ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
-    // 
-    // Kraken2 taxonomical annotation of contigs
-    // 
-    // adjust metamap to switch to single end
-    trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
-    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
-    KRKN_ARCH(trans_cds, k2_arch_db, true, true)
-    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
+        // 
+        // Quantification w/ salmon
+        //
+        salmon_ind = SALMON_INDEX(assembled_contigs).index
+        ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
+        SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
+        ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
+
+        // 
+        // Functional annotation with eggnog-mapper
+        // 
+        eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+        eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+        EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+        ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+
+        // 
+        // Functional annotation with hmmscan
+        // 
+        hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
+        hmmerfile  = Channel.value(params.hmmerfile)
+        HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+        ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+
+        // 
+        // Kraken2 taxonomical annotation of contigs
+        // 
+        // adjust metamap to switch to single end
+        trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
+        k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+        KRKN_ARCH(trans_cds, k2_arch_db, true, true)
+        ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
+    }
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

@@ -11,4 +11,5 @@ reports:
     display: Early FastQC results
   "**/Bowtie2_logs.txt":
     display: Bowtie2 Combined Parallel Report
-    
+  "**/*contig_dist.png":
+    display: Assembler Contig Distribution Plot

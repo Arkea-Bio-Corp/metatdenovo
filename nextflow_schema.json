@@ -162,7 +162,7 @@
                 },
                 "confidence": {
                     "type": "number",
-                    "default": 0,
+                    "default": 0.01,
                     "description": "A scoring value between 0 and 1 that acts as a threshold for labeling an individual sequence a specific taxonomy ID. The classifier will adjust the label up the taxonomic tree until the label meets or exceeds the set threshold.",
                     "fa_icon": "fas fa-crosshairs"
                 },
@@ -171,7 +171,7 @@
                     "description": "Directory for Kraken2 database of ONLY archaeal organisms.",
                     "pattern": "^\\S+",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/archaea_db/",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_reference/archdb_rugs_kl25s4/",
                     "fa_icon": "fas fa-viruses"
                 },
                 "no_archaea_db": {
@@ -188,8 +188,32 @@
         "assembly_options": {
             "title": "de novo assembly",
             "type": "object",
-            "description": "Options that are specific to Trinity for assembly of RNA-Seq data",
+            "description": "Options that are specific to the assembler of choice. Not all options are avilable to all assemblers.",
             "properties": {
+                "assembler": {
+                    "type": "string",
+                    "default": "Megahit",
+                    "enum": [
+                        "Megahit",
+                        "Trans-Abyss",
+                        "SOAP-DeNovo-Trans",
+                        "Trinity"
+                    ],
+                    "description": "Choose which assembler tool to use. Run times and results may vary drastically between assemblers.",
+                    "fa_icon": "fas fa-bars-staggered"
+                },
+                "soapdn_len": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "Length of the minimum contig to be used in the Soap-DeNovo-Trans assembler.",
+                    "help_text": "Does NOT work for other assemblers."
+                },
+                "tabyss_len": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "Length of the minimum contig to be used in the Trans-Abyss assembler.",
+                    "help_text": "Does NOT work for other assemblers."
+                },
                 "normalize_assembly": {
                     "type": "boolean",
                     "default": true,
@@ -243,6 +267,12 @@
             "description": "Functional annotation options for eggnog and hmmscan.",
             "type": "object",
             "properties": {
+                "run_post_assembly": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If disabled, skips the CD-HIT through Eggnog and hmmersearch steps. Useful if merely preparing for a later meta-assembly.",
+                    "fa-icon": "fas fa-ban"
+                },
                 "eggnogdir": {
                     "type": "string",
                     "description": "Directory with multiple eggnog indexes and databases.",
