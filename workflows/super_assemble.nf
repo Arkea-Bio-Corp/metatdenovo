@@ -72,7 +72,7 @@ include { SALMON_INDEX                 } from '../modules/nf-core/salmon/index/'
 include { SALMON_QUANT                 } from '../modules/nf-core/salmon/quant/'
 include { TRANSDECODER_LONGORF         } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT         } from '../modules/nf-core/transdecoder/predict/'
-
+include { CAT_QUANTS                   } from '../modules/local/cat/cat_quants'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -123,11 +123,15 @@ workflow POST_ASSEMBLE_CLUSTER {
     SALMON_QUANT(reads_list, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
+
+    CAT_QUANTS(SALMON_QUANT.out.quants.collect())
+    CAT_QUANTS.out.combined.view()
+
     // Functional annotation with eggnog-mapper
-    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
-    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    // eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
+    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Functional annotation with hmmscan
     hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
