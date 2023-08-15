@@ -18,7 +18,7 @@ counts_input %>%
   summarise(across(everything(), sum)) %>%
   within(Tool <- factor(Tool, levels = order_pipeline)) -> counts_table
 
-ggplot(counts_table, aes(x = Tool, y = Reads, fill = Reads)) +
+b <- ggplot(counts_table, aes(x = Tool, y = Reads, fill = Reads)) +
   geom_bar(stat = "identity") +
   scale_fill_gradient(low = "darkgreen", high = "red") +
   theme_minimal() +
@@ -30,6 +30,10 @@ ggplot(counts_table, aes(x = Tool, y = Reads, fill = Reads)) +
     axis.text.x = element_text(angle = 35, vjust = 0.75),
     legend.position = "none"
   )
+
+l <- plotly::ggplotly(b)
+
+htmlwidgets::saveWidget(l, "All_counts_plot_mqc.html")
 
 ggsave(
   filename = "All_counts_plot_mqc.png", device = "png",

@@ -8,6 +8,7 @@ process COUNTS_PLOT {
 
     output:
     path("*.png")                               , emit: counts_png
+    path("*.html")                              , emit: counts_html
     path "versions.yml"                         , emit: versions
 
     when:

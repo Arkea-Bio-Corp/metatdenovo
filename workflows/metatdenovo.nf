@@ -328,9 +328,8 @@ workflow METATDENOVO {
     workflow_summary    = WorkflowMetatdenovo.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-    // TODO: don't forget me........
-    // COUNTS_PLOT(CUSTOM_DUMPCOUNTS.out.readcounts)
-    // ch_versions = ch_versions.mix(COUNTS_PLOT.out.versions)
+    COUNTS_PLOT(CUSTOM_DUMPCOUNTS.out.readcounts)
+    ch_versions = ch_versions.mix(COUNTS_PLOT.out.versions)
 
     methods_description    = WorkflowMetatdenovo.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
     ch_methods_description = Channel.value(methods_description)
@@ -338,7 +337,8 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
-    // ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
 
 
     MULTIQC (
