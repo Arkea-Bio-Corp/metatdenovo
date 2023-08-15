@@ -1,5 +1,6 @@
 process TRANSDECODER_LONGORF {
     tag "$meta.id"
+    cache false
 
     conda "bioconda::transdecoder=5.5.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

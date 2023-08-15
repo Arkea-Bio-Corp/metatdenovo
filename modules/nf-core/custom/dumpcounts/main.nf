@@ -9,13 +9,13 @@ process CUSTOM_DUMPCOUNTS {
     tuple val(meta), val("null")
 
     output:
-    tuple val(meta), path("pipeline_counts.txt"), emit: readcounts
+    tuple val(meta), path("pipeline_counts.csv"), emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     """
-    cat collated_counts.txt > pipeline_counts.txt
+    cat collated_counts.csv > pipeline_counts.csv
     """
 }

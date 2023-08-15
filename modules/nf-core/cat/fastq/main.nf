@@ -13,7 +13,7 @@ process CAT_FASTQ {
     output:
     tuple val(meta), path("*.merged.fastq.gz"), emit: reads
     path "versions.yml"                       , emit: versions
-    path "counts.txt"                         , emit: readcounts
+    path "counts.csv"                         , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -31,9 +31,8 @@ process CAT_FASTQ {
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
             END_VERSIONS
-            cat <<-END_COUNTS > counts.txt
-            "${task.process}":
-                \$(zcat *.merged.fastq.gz | grep -c "@" )
+            cat <<-END_COUNTS > counts.csv
+            "${task.process}", \$(zcat *.merged.fastq.gz | grep -c "@" )
             END_COUNTS
             """
         }
@@ -50,9 +49,8 @@ process CAT_FASTQ {
             "${task.process}":
                 cat: \$(echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//')
             END_VERSIONS
-            cat <<-END_COUNTS > counts.txt
-            "${task.process}":
-                \$(zcat *.merged.fastq.gz | grep -c "@" )
+            cat <<-END_COUNTS > counts.csv
+            "${task.process}", \$(zcat *.merged.fastq.gz | grep -c "@" )
             END_COUNTS
             """
         }

@@ -17,7 +17,7 @@ process SORTMERNA {
     tuple val(meta), val("null")       , emit: meta // passing meta tag only to others
     path "*.log"                       , emit: collect_log
     path  "versions.yml"               , emit: versions
-    path  "counts.txt"                 , emit: readcounts
+    path  "counts.csv"                 , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -49,9 +49,8 @@ process SORTMERNA {
         "${task.process}":
             sortmerna: \$(echo \$(sortmerna --version 2>&1) | sed 's/^.*SortMeRNA version //; s/ Build Date.*\$//')
         END_VERSIONS
-        cat <<-END_COUNTS > counts.txt
-        "${task.process}_${task.index}":
-            \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
+        cat <<-END_COUNTS > counts.csv
+        "${task.process}", \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
         END_COUNTS
         """
     } else {
@@ -78,9 +77,8 @@ process SORTMERNA {
         "${task.process}":
             sortmerna: \$(echo \$(sortmerna --version 2>&1) | sed 's/^.*SortMeRNA version //; s/ Build Date.*\$//')
         END_VERSIONS
-        cat <<-END_COUNTS > counts.txt
-        "${task.process}_${task.index}":
-            \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
+        cat <<-END_COUNTS > counts.csv
+        "${task.process}", \$(zcat *non_rRNA.fastq.gz | grep -c "@" )
         END_COUNTS
         """
     }

@@ -230,7 +230,7 @@ workflow METATDENOVO {
     BBMAP_DEDUPE(merged_reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.txt'), 
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.csv'), 
                                                  BBMAP_DEDUPE.out.meta)
 
     // 
@@ -328,8 +328,9 @@ workflow METATDENOVO {
     workflow_summary    = WorkflowMetatdenovo.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-    COUNTS_PLOT(CUSTOM_DUMPCOUNTS.out.readcounts)
-    ch_versions = ch_versions.mix(COUNTS_PLOT.out.versions)
+    // TODO: don't forget me........
+    // COUNTS_PLOT(CUSTOM_DUMPCOUNTS.out.readcounts)
+    // ch_versions = ch_versions.mix(COUNTS_PLOT.out.versions)
 
     methods_description    = WorkflowMetatdenovo.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
     ch_methods_description = Channel.value(methods_description)
@@ -337,7 +338,7 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
 
 
     MULTIQC (

@@ -20,7 +20,7 @@ process KRAKEN2_KRAKEN2 {
     tuple val(meta), val("null")                 , emit: meta // passing meta tag only to others
     path('*report.txt')                          , emit: collect_log // only report to collect
     path "versions.yml"                          , emit: versions
-    path "counts.txt"                            , emit: readcounts
+    path "counts.csv"                            , emit: readcounts
 
     when:
     task.ext.when == null || task.ext.when
@@ -57,9 +57,8 @@ process KRAKEN2_KRAKEN2 {
         kraken2: \$(echo \$(kraken2 --version 2>&1) | sed 's/^.*Kraken version //; s/ .*\$//')
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
-    cat <<-END_COUNTS > counts.txt
-    "${task.process}_${task.index}":
-        \$(zcat *unclassified* | grep -c "@" )
+    cat <<-END_COUNTS > counts.csv
+    "${task.process}", \$(zcat *unclassified* | grep -c "@" )
     END_COUNTS
     """
 }
