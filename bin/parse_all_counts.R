@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 suppressMessages(library(tidyverse))
-
 args <- commandArgs(trailingOnly = TRUE)
 
 counts_input <- as_tibble(read.csv(args[1],
@@ -32,8 +31,7 @@ b <- ggplot(counts_table, aes(x = Tool, y = Reads, fill = Reads)) +
     legend.position = "none"
   )
 
-library(highcharter)
-hchart(counts_table, "column", hcaes(x = Tool, y = Reads)) -> l
+l <- plotly::ggplotly(b)
 
 htmlwidgets::saveWidget(l, "All_counts_plot_mqc.html")
 

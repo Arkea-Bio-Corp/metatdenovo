@@ -293,10 +293,10 @@ workflow METATDENOVO {
         // 
         // Functional annotation with eggnog-mapper
         // 
-        eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-        eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
-        EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-        ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+        // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+        // eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
+        // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+        // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
         // 
         // Functional annotation with hmmscan
@@ -339,7 +339,7 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
     // Plotly output is buggy, skip for now:
-    // ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
 
 
     MULTIQC (
