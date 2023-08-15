@@ -1,13 +1,14 @@
 process COUNTS_PLOT {
     tag "$meta.id"
 
-    container "rocker/verse"
+    container "public.ecr.aws/arkeabio/plotting:latest"
 
     input:
     tuple val(meta), path(counts_txt)
 
     output:
     path("*.png")                               , emit: counts_png
+    path("*.html")                              , emit: counts_html
     path "versions.yml"                         , emit: versions
 
     when:

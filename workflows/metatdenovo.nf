@@ -230,7 +230,7 @@ workflow METATDENOVO {
     BBMAP_DEDUPE(merged_reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.txt'), 
+    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.csv'), 
                                                  BBMAP_DEDUPE.out.meta)
 
     // 
@@ -338,6 +338,8 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
+    // Plotly output is buggy, skip for now:
+    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
 
 
     MULTIQC (
