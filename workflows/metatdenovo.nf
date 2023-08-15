@@ -338,7 +338,8 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
+    // Plotly output is buggy, skip for now:
+    // ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
 
 
     MULTIQC (

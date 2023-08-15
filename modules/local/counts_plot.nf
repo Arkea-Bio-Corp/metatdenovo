@@ -1,7 +1,7 @@
 process COUNTS_PLOT {
     tag "$meta.id"
 
-    container "rocker/verse"
+    container "public.ecr.aws/arkeabio/plotting:latest"
 
     input:
     tuple val(meta), path(counts_txt)
