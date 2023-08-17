@@ -13,7 +13,7 @@ process SALMON_QUANT {
     output:
     tuple val(meta), path("${prefix}") , emit: results
     tuple val(meta), path("*info.json"), emit: json_info, optional: true
-    path  "*/quant.sf"                   , emit: quants
+    tuple val(meta), path("*/quant.sf"), emit: quants
     path  "versions.yml"               , emit: versions
 
     when:

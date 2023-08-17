@@ -2,7 +2,8 @@ process SALMON_MERGE {
     container "quay.io/biocontainers/salmon:1.10.1--h7e5ed60_0"
 
     input:
-    path(quants, stageAs: "?/*")
+    val(metas)
+    path(quants, stageAs: "quant?.sf")
 
     output:
     path  "*.sf"                       , emit: quants
@@ -15,11 +16,10 @@ process SALMON_MERGE {
     def args = task.ext.args   ?: ''
 
     """
-    quant_dirs="\$(ls -d -- */)"
 
     salmon quantmerge \\
         --quants \$(echo $quants | grep -o "[0-9]\\+/" | awk '\$1=\$1' ORS=' ') \\
-        --names $quants \\
+        --names $metas \\
         --column numreads \\
         --output salmon_qaunt_out.sf \\
         $args 
