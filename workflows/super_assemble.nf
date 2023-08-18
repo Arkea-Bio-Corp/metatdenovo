@@ -108,14 +108,14 @@ workflow POST_ASSEMBLE_CLUSTER {
     ch_versions = ch_versions.mix(CAT_CAT.out.versions)
 
     // cluster by sequence similarity
-    // CDHIT_CDHIT(CAT_CAT.out.file_out)
-    // ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions) 
+    CDHIT_CDHIT(CAT_CAT.out.file_out)
+    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions) 
 
     // ORF prediction
-    // tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
-    // ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
-    // TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
-    // ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
+    tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
+    ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
+    TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
+    ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
 
     // Quantification w/ salmon
     salmon_ind = SALMON_INDEX(CAT_CAT.out.file_out).index
@@ -132,21 +132,21 @@ workflow POST_ASSEMBLE_CLUSTER {
     ch_versions = ch_versions.mix(SALMON_MERGE.out.versions)
 
     // Functional annotation with eggnog-mapper
-    // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    // eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
-    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+    eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
+    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Functional annotation with hmmscan
-    // hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    // hmmerfile  = Channel.value(params.hmmerfile)
-    // HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
-    // ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+    hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
+    hmmerfile  = Channel.value(params.hmmerfile)
+    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
  
     // Kraken2 taxonomical annotation of contigs 
     // adjust metamap to switch to single end
-    // trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
-    // k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
-    // KRKN_ARCH(trans_cds, k2_arch_db, true, true)
-    // ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
+    trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+    KRKN_ARCH(trans_cds, k2_arch_db, true, true)
+    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 }
