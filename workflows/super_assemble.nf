@@ -70,9 +70,9 @@ include { CDHIT_CDHIT                  } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH } from '../modules/nf-core/kraken2/'
 include { SALMON_INDEX                 } from '../modules/nf-core/salmon/index/'
 include { SALMON_QUANT                 } from '../modules/nf-core/salmon/quant/'
+include { SALMON_MERGE                 } from '../modules/nf-core/salmon/merge/'
 include { TRANSDECODER_LONGORF         } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT         } from '../modules/nf-core/transdecoder/predict/'
-include { CAT_QUANTS                   } from '../modules/local/cat/cat_quants'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -123,9 +123,13 @@ workflow POST_ASSEMBLE_CLUSTER {
     SALMON_QUANT(reads_list, salmon_ind)   
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
-
-    CAT_QUANTS(SALMON_QUANT.out.quants.collect())
-    CAT_QUANTS.out.combined.view()
+    SALMON_QUANT.out.quants
+        .toList()
+        .transpose()
+        .toList()
+        .set { quant_list }
+    SALMON_MERGE(quant_list)
+    ch_versions = ch_versions.mix(SALMON_MERGE.out.versions)
 
     // Functional annotation with eggnog-mapper
     eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
