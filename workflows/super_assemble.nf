@@ -124,15 +124,11 @@ workflow POST_ASSEMBLE_CLUSTER {
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     SALMON_QUANT.out.quants
-        .multiMap { it ->
-            metas: it[0].id
-            quants: it[1]
-        }
-        .set { all_quants }
-    all_quants.metas.collect().view().set{ meta_list }
-    all_quants.quants.collect().view().set{ quant_list }
-
-    SALMON_MERGE(meta_list, quant_list)
+        .toList()
+        .transpose()
+        .toList()
+        .set { quant_list }
+    SALMON_MERGE(quant_list)
     ch_versions = ch_versions.mix(SALMON_MERGE.out.versions)
 
     // Functional annotation with eggnog-mapper
