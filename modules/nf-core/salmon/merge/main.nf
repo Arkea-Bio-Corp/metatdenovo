@@ -19,7 +19,7 @@ process SALMON_MERGE {
         --quants \$(echo $quants | grep -o "[0-9]\\+/" | awk '\$1=\$1' ORS=' ') \\
         --names ${metas.collect{ it.id }.join(" ")} \\
         --column numreads \\
-        --output salmon_qaunt_out.sf \\
+        --output salmon_quant_out.sf \\
         $args 
 
     cat <<-END_VERSIONS > versions.yml
