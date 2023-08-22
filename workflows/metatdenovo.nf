@@ -67,6 +67,7 @@ include { INPUT_CHECK     } from '../subworkflows/local/input_check'
 //
 
 include { CAT_FASTQ 	          	       } from '../modules/nf-core/cat/fastq/'
+include { CAT_FASTQ as CAT_FASTQ_SALM      } from '../modules/nf-core/cat/fastq/'
 include { FASTQC as PRE_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_MERGE_FQC         } from '../modules/nf-core/fastqc/'
 include { MULTIQC                          } from '../modules/nf-core/multiqc/'
@@ -86,6 +87,7 @@ include { KRAKEN2_KRAKEN2 as KRKN_ARCH     } from '../modules/nf-core/kraken2/'
 include { KRAKEN2_KRAKEN2 as KRKN_NO_ARCH  } from '../modules/nf-core/kraken2/'
 include { SALMON_INDEX                     } from '../modules/nf-core/salmon/index/'
 include { SALMON_QUANT                     } from '../modules/nf-core/salmon/quant/'
+include { SALMON_MERGE                     } from '../modules/nf-core/salmon/merge/'
 include { SORTMERNA                        } from '../modules/nf-core/sortmerna/'
 include { TRANSDECODER_LONGORF             } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT             } from '../modules/nf-core/transdecoder/predict/'
@@ -206,7 +208,8 @@ workflow METATDENOVO {
     // RECOMBINE ~~~~
     KRKN_NO_ARCH.out.unclassified_reads_fastq
         .groupTuple()
-        .map { [it[0], it[1].flatten()] }
+        .collect ( sample -> sample[1].flatten() )
+        .map { [[id: "all_samples", single_end: false], it] }
         .set { collectedFastqs }
     CAT_FASTQ(collectedFastqs)
     ch_versions = ch_versions.mix(CAT_FASTQ.out.versions)
@@ -285,10 +288,26 @@ workflow METATDENOVO {
         // 
         // Quantification w/ salmon
         //
+        // need to merge these reads again, by sample
+        KRKN_NO_ARCH.out.unclassified_reads_fastq
+            .groupTuple()
+            .map { [it[0], it[1].flatten()] }
+            .set { collectedFastqs }
+        CAT_FASTQ_SALM(collectedFastqs)
+        ch_versions = ch_versions.mix(CAT_FASTQ_SALM.out.versions)
+
         salmon_ind = SALMON_INDEX(assembled_contigs).index
         ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-        SALMON_QUANT(CAT_FASTQ.out.reads, salmon_ind)   
+        SALMON_QUANT(CAT_FASTQ_SALM.out.reads, salmon_ind)   
         ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
+
+        SALMON_QUANT.out.quants
+            .toList()
+            .transpose()
+            .toList()
+            .set { quant_list }
+        SALMON_MERGE(quant_list)
+        ch_versions = ch_versions.mix(SALMON_MERGE.out.versions)
 
         // 
         // Functional annotation with eggnog-mapper
@@ -339,7 +358,7 @@ workflow METATDENOVO {
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
     // Plotly output is buggy, skip for now:
-    ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_html.ifEmpty([]))
 
 
     MULTIQC (
