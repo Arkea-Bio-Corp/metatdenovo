@@ -33,10 +33,10 @@ process TRANSRATE {
 
     mv ${prefix}_transrate/assemblies.csv ${prefix}_assemblies.csv
 
+    transrate --version > version.txt
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        transrate: 1.0.3
+        transrate: \$(cat version.txt)
     END_VERSIONS
     """
-    // transrate isn't getting updated and I can't figure out how to print the version
 }
