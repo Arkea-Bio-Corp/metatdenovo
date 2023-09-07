@@ -97,7 +97,7 @@ include { TRINITY                          } from '../modules/nf-core/trinity/'
 include { SOAP_DENOVO_TRANS                } from '../modules/local/soap-denovo-trans'
 include { MEGAHIT                          } from '../modules/nf-core/megahit/'
 include { TRANS_ABYSS                      } from '../modules/local/transabyss'
-include { ASSEMBLE_STATS                   }  from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS                   } from '../subworkflows/local/bt2_assembly_stats'
 
 
 /*
@@ -233,8 +233,8 @@ workflow METATDENOVO {
     BBMAP_DEDUPE(merged_reads)
     ch_versions = ch_versions.mix(BBMAP_DEDUPE.out.versions)
     ch_read_counts = ch_read_counts.mix(BBMAP_DEDUPE.out.readcounts)
-    CUSTOM_DUMPCOUNTS(ch_read_counts.collectFile(name: 'collated_counts.csv'), 
-                                                 BBMAP_DEDUPE.out.meta)
+    ch_collect_counts = ch_read_counts.collectFile(name: 'collated_counts.csv')
+    CUSTOM_DUMPCOUNTS(ch_collect_counts, BBMAP_DEDUPE.out.meta)
 
     // 
     // Run your assembler of choice
