@@ -33,10 +33,6 @@ ggplot(fasta_frame, aes(x = value)) +
     linetype = "longdash",
     linewidth = 1
   ) +
-  stat_bin(aes(
-    y = ..count..,
-    label = ..count..
-  ), geom = "text", vjust = -.5) +
   theme_minimal() +
   theme(legend.position = "top") +
   scale_color_manual(
