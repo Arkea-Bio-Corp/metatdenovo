@@ -28,8 +28,8 @@
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
-                    "default": "s3://arkeabio-nextflow-general/meta-t_outputs/",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+                    "default": "s3://arkeabio-nextflow-general/meta-t_outputs/",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "multiqc_title": {

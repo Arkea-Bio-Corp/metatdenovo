@@ -20,6 +20,14 @@ counts_input %>%
 
 b <- ggplot(counts_table, aes(x = Tool, y = Reads, fill = Reads)) +
   geom_bar(stat = "identity") +
+  geom_text(
+    stat = "identity",
+    aes(
+      y = Reads,
+      label = format(Reads, big.mark = ",")
+    ),
+    vjust = -0.2
+  ) +
   scale_fill_gradient(low = "darkgreen", high = "red") +
   theme_minimal() +
   ggtitle("Total Counts After Each Step, before Assembly") +
