@@ -145,11 +145,11 @@ workflow METATDENOVO {
 
     // Split by split_size
     ch_fastq[0]
-        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
-        .splitFastq(by: params.split_size, 
-                    pe: true, file: true, 
-                    compress: true, decompress: true)
-        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+        // .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
+        // .splitFastq(by: params.split_size, 
+        //             pe: true, file: true, 
+        //             compress: true, decompress: true)
+        // .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
         .set { trim_split }
 
     //
