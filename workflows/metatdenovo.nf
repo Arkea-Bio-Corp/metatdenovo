@@ -91,7 +91,7 @@ include { SALMON_MERGE                     } from '../modules/nf-core/salmon/mer
 include { SORTMERNA                        } from '../modules/nf-core/sortmerna/'
 include { TRANSDECODER_LONGORF             } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT             } from '../modules/nf-core/transdecoder/predict/'
-include { TRIMGALORE                       } from '../modules/nf-core/trimgalore/'
+include { SEQKIT_SPLIT2                    } from '../modules/nf-core/seqkit/split2/'
 include { TRIMMOMATIC                      } from '../modules/nf-core/trimmomatic'
 include { TRINITY                          } from '../modules/nf-core/trinity/'
 include { SOAP_DENOVO_TRANS                } from '../modules/local/soap-denovo-trans'
@@ -144,14 +144,32 @@ workflow METATDENOVO {
 
 
     // Split by split_size
-    ch_fastq[0]
-        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
-        .splitFastq(by: params.split_size, 
-                    pe: true, file: false, 
-                    compress: false, decompress: true)
-        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+    // ch_fastq[0]
+    //     .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
+    //     .splitFastq(by: params.split_size, 
+    //                 pe: true, file: false, 
+    //                 compress: false, decompress: true)
+    //     .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+    //     .set { trim_split }
+
+    ch_fastq[0].view()
+    SEQKIT_SPLIT2(ch_fastq[0])
+    SEQKIT_SPLIT2.out.reads
+        .map { meta, reads ->
+            int leng = reads.size()/2
+            splitreads = reads.collate(leng)
+            def combined_arr = []
+            for(int i = 0;i<leng;i++) {
+                combined_arr.add([splitreads[0][i], splitreads[1][i]])
+            }
+            [meta, combined_arr]
+        }
+        .view()
+        .transpose()
+        .view()
         .set { trim_split }
 
+    ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions)
     //
     // trimmomatic
     //
