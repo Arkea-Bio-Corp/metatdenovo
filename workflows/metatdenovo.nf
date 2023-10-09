@@ -212,11 +212,11 @@ workflow METATDENOVO {
     // 
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
     KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
-    KR2_LOGS(
-        KRKN_NO_ARCH.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
-        "Kraken2_no_archaea",
-        KRKN_NO_ARCH.out.meta
-    )
+    // KR2_LOGS(
+    //     KRKN_NO_ARCH.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
+    //     "Kraken2_no_archaea",
+    //     KRKN_NO_ARCH.out.meta
+    // )
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
     ch_read_counts = ch_read_counts.mix(KRKN_NO_ARCH.out.readcounts)
 
