@@ -152,7 +152,6 @@ workflow METATDENOVO {
     //     .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
     //     .set { trim_split }
 
-    ch_fastq[0].view()
     SEQKIT_SPLIT2(ch_fastq[0])
     SEQKIT_SPLIT2.out.reads
         .map { meta, reads ->
@@ -164,9 +163,7 @@ workflow METATDENOVO {
             }
             [meta, combined_arr]
         }
-        .view()
         .transpose()
-        .view()
         .set { trim_split }
 
     ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions)
