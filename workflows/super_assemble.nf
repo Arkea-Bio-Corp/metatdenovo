@@ -96,17 +96,14 @@ workflow POST_ASSEMBLE_CLUSTER {
         .splitCsv(header: ['sample', 'fastq_1', 'fastq_2'], skip: 1 )
         .map { row -> [ [id: row.sample, single_end: false], 
                         [row.fastq_1, row.fastq_2].flatten() ] }
-        .view()
         .set { reads_list }
     
     // Run a quick QC check
     // & change meta tag to improve output directory labeling
     Channel.fromPath(params.assembly_path)
-        .map { [[id: "all_samples", 
-                single_end: false], 
-                it] }
+        .map { [[id: "all_samples", single_end: false], it] }
         .set { qc_contigs }
-    // ASSEMBLE_STATS(qc_contigs, reads_list, params.assembler)
+    ASSEMBLE_STATS(qc_contigs, reads_list, params.assembler)
 
     // Quantification w/ salmon
     salmon_ind = SALMON_INDEX(qc_contigs).index.collect()
@@ -156,7 +153,7 @@ workflow POST_ASSEMBLE_CLUSTER {
 
 CUSTOM_DUMPSOFTWARE (
         ch_versions.unique().collectFile(name: 'collated_versions.yml'),
-        [id: "all_samples", single_end: false]
+        [[id: "all_samples", single_end: false]]
     ) 
 
     // MultiQC
@@ -169,7 +166,7 @@ CUSTOM_DUMPSOFTWARE (
         ch_multiqc_config.toList(),
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList(),
-        [id: "all_samples", single_end: false]
+        [[id: "all_samples", single_end: false]]
     )
     multiqc_report = MULTIQC.out.report.toList()
 
