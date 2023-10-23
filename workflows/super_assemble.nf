@@ -65,7 +65,7 @@ include { CAT_CAT                      } from '../modules/nf-core/cat/cat/'
 include { CAT_CAT as CAT_QUANT         } from '../modules/nf-core/cat/cat/'
 include { CAT_FASTQ 	          	   } from '../modules/nf-core/cat/fastq/'
 include { MULTIQC                      } from '../modules/nf-core/multiqc/'
-include { CUSTOM_DUMPSOFTWAREVERSIONS  } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { CUSTOM_DUMPSOFTWARE   } from '../modules/nf-core/custom/dumpsoftwareversions/'
 include { CDHIT_CDHIT                  } from '../modules/nf-core/cdhit/'
 include { KRAKEN2_KRAKEN2 as KRKN_ARCH } from '../modules/nf-core/kraken2/'
 include { SALMON_INDEX                 } from '../modules/nf-core/salmon/index/'
@@ -73,6 +73,7 @@ include { SALMON_QUANT                 } from '../modules/nf-core/salmon/quant/'
 include { SALMON_MERGE                 } from '../modules/nf-core/salmon/merge/'
 include { TRANSDECODER_LONGORF         } from '../modules/nf-core/transdecoder/longorf/'
 include { TRANSDECODER_PREDICT         } from '../modules/nf-core/transdecoder/predict/'
+include { ASSEMBLE_STATS               } from '../subworkflows/local/bt2_assembly_stats'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -87,40 +88,30 @@ workflow POST_ASSEMBLE_CLUSTER {
     ch_versions = Channel.empty()
     ch_read_counts = Channel.empty()
 
-    // Gather files
     // Sample sheet csv should be organized like so:
-    // sample,assembly,reads
-    // sample1,/path/to/assembly.fa.gz,/path/to/reads.fq.gz
+    // sample,fastq_1,fastq_2
+    // sample1,/path/to/reads1.fq.gz,/path/to/reads2.fq.gz
 
     Channel.fromPath(ch_input)
-        .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
-        .collect(row -> "${row.assembly}")
-        .map { [[id: "combined_assembly", single_end: true], it] }
-        .set { assembly_list }
-
-    Channel.fromPath(ch_input)
-        .splitCsv(header: ['sample', 'assembly', 'reads'], skip: 1 )
-        .map { row -> [[id: row.sample, single_end: true], row.reads] }
+        .splitCsv(header: ['sample', 'fastq_1', 'fastq_2'], skip: 1 )
+        .map { row -> [ [id: row.sample, single_end: false], 
+                        [row.fastq_1, row.fastq_2] ] }
+        .view()
         .set { reads_list }
     
-    // combine gzipped fasta assemblies with CAT 🐈
-    CAT_CAT(assembly_list)
-    ch_versions = ch_versions.mix(CAT_CAT.out.versions)
-
-    // cluster by sequence similarity
-    CDHIT_CDHIT(CAT_CAT.out.file_out)
-    ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions) 
-
-    // ORF prediction
-    tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
-    ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
-    TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
-    ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
+    // Run a quick QC check
+    // & change meta tag to improve output directory labeling
+    Channel.fromPath(params.assembly_path)
+        .map { [[id: "all_samples", 
+                single_end: false], 
+                it] }
+        .set { qc_contigs }
+    // ASSEMBLE_STATS(qc_contigs, reads_list, params.assembler)
 
     // Quantification w/ salmon
-    salmon_ind = SALMON_INDEX(CAT_CAT.out.file_out).index
+    salmon_ind = SALMON_INDEX(qc_contigs).index
     ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
-    SALMON_QUANT(reads_list, salmon_ind)   
+    SALMON_QUANT(reads_list, salmon_ind)
     ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
     SALMON_QUANT.out.quants
@@ -131,22 +122,32 @@ workflow POST_ASSEMBLE_CLUSTER {
     SALMON_MERGE(quant_list)
     ch_versions = ch_versions.mix(SALMON_MERGE.out.versions)
 
+    // cluster by sequence similarity
+    // CDHIT_CDHIT(qc_contigs)
+    // ch_versions = ch_versions.mix(CDHIT_CDHIT.out.versions) 
+
+    // ORF prediction
+    // tdecoder_folder = TRANSDECODER_LONGORF(CDHIT_CDHIT.out.fasta).folder
+    // ch_versions = ch_versions.mix(TRANSDECODER_LONGORF.out.versions)
+    // TRANSDECODER_PREDICT(CDHIT_CDHIT.out.fasta, tdecoder_folder)
+    // ch_versions = ch_versions.mix(TRANSDECODER_PREDICT.out.versions)
+
     // Functional annotation with eggnog-mapper
-    eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
-    eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
-    EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
-    ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
+    // eggdbchoice = ["diamond", "mmseqs", "novel_fams"]
+    // eggnog_ch = Channel.value(file(params.eggnogdir, checkIfExists: true))
+    // EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
+    // ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
 
     // Functional annotation with hmmscan
-    hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    hmmerfile  = Channel.value(params.hmmerfile)
-    HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
-    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
- 
+    // hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
+    // hmmerfile  = Channel.value(params.hmmerfile)
+    // HMMER_HMMSCAN(TRANSDECODER_PREDICT.out.pep, hmmerdir, hmmerfile)
+    // ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+
     // Kraken2 taxonomical annotation of contigs 
     // adjust metamap to switch to single end
-    trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
-    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
-    KRKN_ARCH(trans_cds, k2_arch_db, true, true)
-    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
+    // trans_cds = TRANSDECODER_PREDICT.out.cds.map{ [[id: it[0].id, single_end: true], it[1]]} 
+    // k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+    // KRKN_ARCH(trans_cds, k2_arch_db, true, true)
+    // ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 }

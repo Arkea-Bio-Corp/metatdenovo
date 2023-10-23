@@ -4,7 +4,7 @@
     Arkea-Bio-Corp/metatdenovo 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Github        : https://github.com/Arkea-Bio-Corp/metatdenovo
-      forked from : https://github.com/nf-core/metatdenovo
+    forked from : https://github.com/nf-core/metatdenovo
 
     Website: https://www.arkeabio.com/
     Authors: Taylor Falk & Laura Holland
@@ -54,4 +54,3 @@ workflow {
     THE END :^)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
- 
