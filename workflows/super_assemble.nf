@@ -149,9 +149,9 @@ workflow POST_ASSEMBLE_CLUSTER {
     // TRANSDECODER_PREDICT.out.cds
     //     .map{ [[id: it[0].id, single_end: true], it[1]]} 
     //     .set { trans_cds }
-    k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
-    KRKN_ARCH(qc_contigs, k2_arch_db, true, true)
-    ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
+    // k2_arch_db = Channel.fromPath(params.archaea_db, checkIfExists: true)
+    // KRKN_ARCH(qc_contigs, k2_arch_db, true, true)
+    // ch_versions = ch_versions.mix(KRKN_ARCH.out.versions)
 
 
 CUSTOM_DUMPSOFTWARE (
