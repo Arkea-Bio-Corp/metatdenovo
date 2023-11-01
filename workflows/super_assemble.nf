@@ -105,6 +105,8 @@ workflow POST_ASSEMBLE_CLUSTER {
         .map { [[id: "all_samples", single_end: false], it] }
         .set { qc_contigs }
     // ASSEMBLE_STATS(qc_contigs, reads_list, params.assembler)
+    // FASTQC(params.assembly_path, "PRE_TRIM")
+    ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
 
     // Quantification w/ salmon
     salmon_ind = SALMON_INDEX(qc_contigs).index.collect()
