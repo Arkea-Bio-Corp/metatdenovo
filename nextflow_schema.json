@@ -190,6 +190,12 @@
             "type": "object",
             "description": "Options that are specific to the assembler of choice. Not all options are avilable to all assemblers.",
             "properties": {
+                "assembly_path" : {
+                    "type": "string",
+                    "description": "Provide if running the part ii of the pipeline only. Not used if running from scratch.",
+                    "format": "directory-path",
+                    "fa_icon": "fas fa-shapes"
+                },
                 "assembler": {
                     "type": "string",
                     "default": "Megahit",

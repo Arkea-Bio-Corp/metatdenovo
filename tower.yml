@@ -11,7 +11,5 @@ reports:
     display: Bowtie2 Combined Parallel Report
   "**/combined_sortmerna_logs.txt":
     display: SortMeRNA Combined Parallel Report
-  "**/combined_kraken2_logs.txt":
-    display: Kraken2 Combined Parallel Report
   "**/*contig_dist.png":
     display: Assembler Contig Distribution Plot

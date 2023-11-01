@@ -71,12 +71,8 @@ include { CAT_FASTQ as CAT_FASTQ_SALM      } from '../modules/nf-core/cat/fastq/
 include { FASTQC as PRE_TRIM_FQC           } from '../modules/nf-core/fastqc/'
 include { FASTQC as POST_MERGE_FQC         } from '../modules/nf-core/fastqc/'
 include { MULTIQC                          } from '../modules/nf-core/multiqc/'
-include { CUSTOM_DUMPSOFTWAREVERSIONS      } from '../modules/nf-core/custom/dumpsoftwareversions/'
-include { CUSTOM_DUMPCOUNTS                } from '../modules/nf-core/custom/dumpcounts/'
-include { CUSTOM_DUMPLOGS as TRM_LOGS      } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as SMR_LOGS      } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as KR2_LOGS      } from '../modules/nf-core/custom/dumplogs/'
-include { CUSTOM_DUMPLOGS as BT2_LOGS      } from '../modules/nf-core/custom/dumplogs/'
+include { CUSTOM_DUMPSOFTWARE   } from '../modules/nf-core/custom/dumpsoftwareversions/'
+include { CUSTOM_DUMPCOUNTS               } from '../modules/nf-core/custom/dumpcounts/'
 include { BOWTIE2_ALIGN                    } from '../modules/nf-core/bowtie2/align/'
 include { BBMAP_DEDUPE                     } from '../modules/nf-core/bbmap/dedupe/'
 include { BBMAP_REPAIR                     } from '../modules/nf-core/bbmap/repair/'
@@ -89,15 +85,15 @@ include { SALMON_INDEX                     } from '../modules/nf-core/salmon/ind
 include { SALMON_QUANT                     } from '../modules/nf-core/salmon/quant/'
 include { SALMON_MERGE                     } from '../modules/nf-core/salmon/merge/'
 include { SORTMERNA                        } from '../modules/nf-core/sortmerna/'
-include { TRANSDECODER_LONGORF             } from '../modules/nf-core/transdecoder/longorf/'
-include { TRANSDECODER_PREDICT             } from '../modules/nf-core/transdecoder/predict/'
-include { TRIMGALORE                       } from '../modules/nf-core/trimgalore/'
+include { TRANSDECODER_LONGORF         } from '../modules/nf-core/transdecoder/longorf/'
+include { TRANSDECODER_PREDICT         } from '../modules/nf-core/transdecoder/predict/'
+include { SEQKIT_SPLIT2                    } from '../modules/nf-core/seqkit/split2/'
 include { TRIMMOMATIC                      } from '../modules/nf-core/trimmomatic'
 include { TRINITY                          } from '../modules/nf-core/trinity/'
 include { SOAP_DENOVO_TRANS                } from '../modules/local/soap-denovo-trans'
 include { MEGAHIT                          } from '../modules/nf-core/megahit/'
 include { TRANS_ABYSS                      } from '../modules/local/transabyss'
-include { ASSEMBLE_STATS                   } from '../subworkflows/local/bt2_assembly_stats'
+include { ASSEMBLE_STATS               } from '../subworkflows/local/bt2_assembly_stats'
 
 
 /*
@@ -142,26 +138,26 @@ workflow METATDENOVO {
     PRE_TRIM_FQC(ch_fastq[0], "PRE_TRIM")
     ch_versions = ch_versions.mix(PRE_TRIM_FQC.out.versions)
 
-
-    // Split by split_size
-    ch_fastq[0]
-        .map { [it.get(0), it.get(1)[0], it.get(1)[1]] }
-        .splitFastq(by: params.split_size, 
-                    pe: true, file: true, 
-                    compress: true, decompress: true)
-        .map{ [ it.get(0), [it.get(1), it.get(2)] ]}
+    SEQKIT_SPLIT2(ch_fastq[0])
+    SEQKIT_SPLIT2.out.reads
+        .map { meta, reads ->
+            int leng = reads.size()/2
+            splitreads = reads.collate(leng)
+            def combined_arr = []
+            for(int i = 0;i<leng;i++) {
+                combined_arr.add([splitreads[0][i], splitreads[1][i]])
+            }
+            [meta, combined_arr]
+        }
+        .transpose()
         .set { trim_split }
 
+    ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions)
     //
     // trimmomatic
     //
     adapter_path = Channel.value(file(params.adapter_fa, checkIfExists: true))
     TRIMMOMATIC(trim_split, adapter_path)
-    TRM_LOGS(
-        TRIMMOMATIC.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
-        "Trimmomatic",
-        TRIMMOMATIC.out.meta
-    )
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
     ch_read_counts = ch_read_counts.mix(TRIMMOMATIC.out.readcounts)
 
@@ -170,11 +166,6 @@ workflow METATDENOVO {
     // 
     index_ch = Channel.value(file(params.indexdir, checkIfExists: true))
     BOWTIE2_ALIGN(TRIMMOMATIC.out.trimmed_reads, index_ch, true, false)
-    BT2_LOGS(
-        BOWTIE2_ALIGN.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
-        "Bowtie2",
-        BOWTIE2_ALIGN.out.meta
-    )
     ch_versions = ch_versions.mix(BOWTIE2_ALIGN.out.versions)
     ch_read_counts = ch_read_counts.mix(BOWTIE2_ALIGN.out.readcounts)
 
@@ -184,11 +175,6 @@ workflow METATDENOVO {
     silva_ch = Channel.value(file(params.silva_reference, checkIfExists: true))
     rna_idx  = Channel.value(file(params.rna_idx, checkIfExists: true))
     SORTMERNA(BOWTIE2_ALIGN.out.fastq, silva_ch, rna_idx)
-    SMR_LOGS(
-        SORTMERNA.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
-        "SortMeRNA",
-        SORTMERNA.out.meta
-    )
     ch_versions = ch_versions.mix(SORTMERNA.out.versions)
     ch_read_counts = ch_read_counts.mix(SORTMERNA.out.readcounts)
 
@@ -197,11 +183,6 @@ workflow METATDENOVO {
     // 
     k2db_ch = Channel.value(file(params.no_archaea_db, checkIfExists: true))
     KRKN_NO_ARCH(SORTMERNA.out.reads, k2db_ch, true, true)
-    KR2_LOGS(
-        KRKN_NO_ARCH.out.collect_log.collectFile(name: 'collected_logs.txt', newLine: true),
-        "Kraken2_no_archaea",
-        KRKN_NO_ARCH.out.meta
-    )
     ch_versions = ch_versions.mix(KRKN_NO_ARCH.out.versions)
     ch_read_counts = ch_read_counts.mix(KRKN_NO_ARCH.out.readcounts)
 
@@ -312,7 +293,8 @@ workflow METATDENOVO {
         // 
         // Functional annotation with eggnog-mapper
         // 
-        eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+        // eggdbchoice = ["diamond", "mmseqs", "hmmer", "novel_fams"]
+        eggdbchoice = ["diamond", "mmseqs", "novel_fams"] // omit hmmer toooo slow
         eggnog_ch = Channel.fromPath(params.eggnogdir, checkIfExists: true)
         EGGNOG_MAPPER(TRANSDECODER_PREDICT.out.pep, eggnog_ch, eggdbchoice)
         ch_versions = ch_versions.mix(EGGNOG_MAPPER.out.versions)
@@ -336,7 +318,7 @@ workflow METATDENOVO {
     }
 
 
-    CUSTOM_DUMPSOFTWAREVERSIONS (
+    CUSTOM_DUMPSOFTWARE (
         ch_versions.unique().collectFile(name: 'collated_versions.yml'),
         BBMAP_DEDUPE.out.meta
     )
@@ -353,7 +335,7 @@ workflow METATDENOVO {
     methods_description    = WorkflowMetatdenovo.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
     ch_methods_description = Channel.value(methods_description)
 
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWARE.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(PRE_TRIM_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(POST_MERGE_FQC.out.zip.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(COUNTS_PLOT.out.counts_png.ifEmpty([]))
