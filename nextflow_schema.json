@@ -196,6 +196,12 @@
                     "format": "directory-path",
                     "fa_icon": "fas fa-shapes"
                 },
+                "salmon_dups" : {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Ask salmon to quantify duplicates.",
+                    "fa_icon": "fas fa-clipboard"
+                },
                 "assembler": {
                     "type": "string",
                     "default": "Megahit",
