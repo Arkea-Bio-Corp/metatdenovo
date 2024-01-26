@@ -32,9 +32,12 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 },
-                "multiqc_title": {
+                "transdecoder_pep": {
                     "type": "string",
-                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
+                    "format": "file-path",
+                    "mimetype": "text/pep",
+                    "pattern": "^\\S+\\.pep$",
+                    "description": "Stick the transdecoder output in here.",
                     "fa_icon": "fas fa-file-signature"
                 }
             }
