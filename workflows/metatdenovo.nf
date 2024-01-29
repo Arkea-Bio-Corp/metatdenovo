@@ -152,10 +152,10 @@ workflow METATDENOVO {
     // Functional annotation with hmmscan
     // 
     // hmmerdir   = Channel.fromPath(params.hmmdir, checkIfExists: true)
-    hmmerdir   = Channel.value(file(params.hmmdir, checkIfExists: true))
-    hmmerfile  = Channel.value(params.hmmerfile)
-    HMMER_HMMSCAN(split_assemb, hmmerdir, hmmerfile)
-    ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
+    // hmmerdir   = Channel.value(file(params.hmmdir, checkIfExists: true))
+    // hmmerfile  = Channel.value(params.hmmerfile)
+    // HMMER_HMMSCAN(split_assemb, hmmerdir, hmmerfile)
+    // ch_versions = ch_versions.mix(HMMER_HMMSCAN.out.versions)
 
 }
 
